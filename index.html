@@ -1,34 +1,37 @@
-<!-- 
-  File: index.html
-  Purpose: 
-    - For our basic HTML structure, including the container 
-      for the Leaflet map (#my-map).
-    - For now just loads necessary CSS and JS libraries (Leaflet, D3) and 
-      project-specific scripts (main.js, leafletMap.js). <- will expand as we go
-    - Contains a <div id="tooltip"> element used by D3 for 
-      displaying quake info on hover.
--->
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Interactive map with Leaflet</title>
-    <link rel="icon" href="data:;base64,iVBORwOKGO=" />
-    <link rel="stylesheet" href="css/leaflet.css">
-    <link rel="stylesheet" href="css/style.css">
+  <title>Interactive map with Leaflet</title>
+  <link rel="icon" href="data:;base64,iVBORwOKGO=" />
+  <link rel="stylesheet" href="css/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <div id="map-container">
     <div id="my-map"></div>
-    
-    <script src="js/d3.v6.min.js"></script>
-    <script src="js/leaflet.js"></script>
+  </div>
 
+  <!-- Chart toggles -->
+  <div id="chart-toggle">
+    <label><input type="checkbox" class="chart-toggle" value="magnitude" checked> Magnitude</label>
+    <label><input type="checkbox" class="chart-toggle" value="duration" checked> Duration</label>
+    <label><input type="checkbox" class="chart-toggle" value="depth" checked> Depth</label>
+  </div>
 
-    <script src="js/main.js"></script>
-    <script src="js/leafletMap.js"></script>
+  <!-- Chart containers -->
+  <div id="charts-container">
+    <div class="chart-box chart-3" id="magnitude-chart"></div>
+    <div class="chart-box chart-3" id="duration-chart"></div>
+    <div class="chart-box chart-3" id="depth-chart"></div>
+  </div>
 
-    <div id="tooltip"></div>
+  <!-- Scripts -->
+  <script src="js/d3.v6.min.js"></script>
+  <script src="js/leaflet.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/leafletMap.js"></script>
 
-
+  <!-- Tooltip for charts -->
+  <div id="tooltip"></div>
 </body>
 </html>
