@@ -129,22 +129,63 @@ class LeafletMap {
 
   }
 
+  setData(newData) {
+    this.data = newData;
+    this.updateVis(); // Re-render everything when switching years 
+  }
+  
   updateVis() {
     let vis = this;
+  
+    // Update scales in case magnitude range changed
+    vis.colorScale.domain(d3.extent(vis.data, d => d.mag));
+    vis.rScale.domain(d3.extent(vis.data, d => d.mag));
+  
+    // Re-bind circles to new data
+    vis.Dots = vis.svg.selectAll('circle')
+      .data(vis.data, d => d.id) // use a key if available to help D3 track elements
+      .join(
+        enter => enter.append('circle')
+          .attr("stroke", "black")
+          .attr("fill", d => vis.colorScale(d.mag))
+          .attr("r", d => vis.rScale(d.mag))
+          .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).x)
+          .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).y)
+          .on('mouseover', function(event,d) {
+              d3.select(this).transition().duration(150).attr("fill", "red").attr('r', 4);
+  
+              d3.select('#tooltip')
+                .style('opacity', 1)
+                .style('z-index', 1000000)
+                .html(`
+                  <div><strong>Location:</strong> ${d.place || 'Unknown'}</div>
+                  <div><strong>Magnitude:</strong> ${d.mag}</div>
+                  <div><strong>Depth:</strong> ${d.depth} km</div>
+                  <div><strong>Time:</strong> ${d.time.toLocaleString()}</div>
+                `);
 
-    //want to see how zoomed in you are? 
-    // console.log(vis.map.getZoom()); //how zoomed am I?
-    //----- maybe you want to use the zoom level as a basis for changing the size of the points... ?
-    
-   
-   //redraw based on new zoom- need to recalculate on-screen position
-    vis.Dots
-      .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).x)
-      .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).y)
-      .attr("fill", d => vis.colorScale(d.mag))
-      .attr("r", d => vis.rScale(d.mag));
-
+          })
+          .on('mousemove', (event) => {
+              d3.select('#tooltip')
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY + 10) + 'px');
+          })
+          .on('mouseleave', function() {
+              d3.select(this).transition().duration(150)
+                .attr("fill", d => vis.colorScale(d.mag))
+                .attr('r', d => vis.rScale(d.mag));
+  
+              d3.select('#tooltip').style('opacity', 0);
+          }),
+        update => update
+          .attr("fill", d => vis.colorScale(d.mag))
+          .attr("r", d => vis.rScale(d.mag))
+          .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).x)
+          .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).y),
+        exit => exit.remove()
+      );
   }
+  
 
 
   renderVis() {
