@@ -19,7 +19,11 @@ d3.csv('data/4-10M_(1995-today).csv')
       d.depth = +d.depth;
       d.mag = +d.mag;
       d.time = new Date(d.time);
-
+      
+      // Separate extract for time details of earthquakes
+      d.year = d.time.getFullYear();
+      d.month = d.time.getMonth(); //0-12 indexing for Jan-Dec
+      d.day = d.time.getDate();    // 1-indexed
 
     });
 
