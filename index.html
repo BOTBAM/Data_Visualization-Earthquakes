@@ -10,9 +10,12 @@
   <div id="map-container">
     <div id="my-map"></div>
   </div>
-
+  <div id="controls">
+    <label for="yearSlider">Year: <span id="yearLabel">2025</span></label><br>
+    <input type="range" id="yearSlider" min="1995" max="2025" value="2025" step="1">
+  </div>
   <!-- Chart toggles -->
-  <div id="chart-toggle">
+  <div>
     <label><input type="checkbox" class="chart-toggle" value="magnitude" checked> Magnitude</label>
     <label><input type="checkbox" class="chart-toggle" value="duration" checked> Duration</label>
     <label><input type="checkbox" class="chart-toggle" value="depth" checked> Depth</label>
@@ -32,10 +35,7 @@
   <script src="js/leafletMap.js"></script>
 
     <div id="tooltip"></div>
-    <div id="controls">
-      <label for="yearSlider">Year: <span id="yearLabel">2025</span></label><br>
-      <input type="range" id="yearSlider" min="1995" max="2025" value="2025" step="1">
-    </div>
+
     
 
 </body>

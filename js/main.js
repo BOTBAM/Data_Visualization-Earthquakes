@@ -35,7 +35,7 @@ d3.csv('data/4-10M_(1995-today).csv')
       leafletMap.setData(yearData);  // ← now dynamically updates the map!
     });
 
-    const leafletMap = new LeafletMap({ parentElement: '#my-map' }, data);
+
 
     // ---- Magnitude Buckets ----
     const magBuckets = {
