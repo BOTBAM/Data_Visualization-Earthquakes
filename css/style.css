@@ -1,11 +1,41 @@
+.layout {
+}
+/* Map area */
+#map-container {
+  width: 140%;
+  height: 600px;
+  height: 500px;
+  margin-top: 50px;
+  transition: width 2s;
+  margin: 0px;
+  border: 1px solid red;
+  overflow: hidden;
+}
+#my-map {
+  width: 140%;
+  height: 100%;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 70% 28%;
+  gap: 20px;
+  /* padding: 20px; */
+  align-items: start;
+}
+
 /* Map area */
 #map-container {
   width: 100%;
-  height: 600px;
+  height: 500px;
+  border: 1px solid red;
 }
-#my-map {
-  width: 100%;
-  height: 100%;
+
+/* Charts area */
+#charts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* Tooltip for bar charts */
@@ -23,11 +53,11 @@
 
 /* Chart layout container */
 #charts-container {
-  display: flex;
+  /* display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-  padding: 20px;
+  padding: 20px; */
 }
 
 /* Each chart container */
@@ -36,12 +66,12 @@
   background-color: #f9f9f9;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
 
 /* Dynamic width classes */
-.chart-1 {
+/* .chart-1 {
   flex: 1 1 100%;
   max-width: 100%;
 }
@@ -52,7 +82,7 @@
 .chart-3 {
   flex: 1 1 31%;
   max-width: 31%;
-}
+} */
 
 /* Chart toggles */
 #chart-toggle {
@@ -66,3 +96,19 @@
   margin-right: 6px;
 }
 
+.container {
+  position: relative; /* Ensures button stays within this container */
+}
+
+.floating-btn {
+  position: absolute;
+  top: 10px;
+  left: 50px;
+  z-index: 1000; /* Ensures it stays on top of other elements */
+  background-color: blue;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
