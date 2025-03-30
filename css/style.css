@@ -18,3 +18,12 @@
   font-size: 10px;
   color: #888;
 }
+
+#controls {
+  margin: 10px;
+  font-size: 14px;
+}
+
+#yearSlider {
+  width: 300px;
+}
