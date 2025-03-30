@@ -173,17 +173,35 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
     .attr("width", x.bandwidth())
     .attr("height", d => height - margin.bottom - y(d.value))
     .attr("fill", color)
-    .on("mouseover", function (event, d) {
-      d3.select(this).attr("fill", hoverColor);
-      const tooltip = document.getElementById("tooltip");
-      tooltip.innerHTML = `<strong>${d.label}</strong>: ${d.value} quakes`;
-      tooltip.style.display = "block";
-      tooltip.style.left = event.pageX + 10 + "px";
-      tooltip.style.top = event.pageY - 20 + "px";
+    .on('mouseover', function(event, d) {
+      d3.select(this).transition()
+        .duration(150)
+        .attr("fill", "red")
+        .attr("r", 4);
+    
+      d3.select('#tooltip')
+        .style('opacity', 1)
+        .style('z-index', 1000000)
+        .html(`
+          <div><strong>Location:</strong> ${d.place || 'Unknown'}</div>
+          <div><strong>Magnitude:</strong> ${d.mag}</div>
+          <div><strong>Depth:</strong> ${d.depth} km</div>
+          <div><strong>Time:</strong> ${d.time.toLocaleString()}</div>
+        `);
     })
-    .on("mouseout", function () {
-      d3.select(this).attr("fill", color);
-      document.getElementById("tooltip").style.display = "none";
+    .on('mousemove', (event) => {
+      d3.select('#tooltip')
+        .style('left', (event.pageX + 10) + 'px')
+        .style('top', (event.pageY + 10) + 'px');
+    })
+    .on('mouseleave', function(event, d) {
+      d3.select(this).transition()
+        .duration(150)
+        .attr("fill", d => vis.colorScale(d.mag))
+        .attr("r", d => vis.rScale(d.mag));
+    
+      d3.select('#tooltip')
+        .style('opacity', 0);
     });
 }
 

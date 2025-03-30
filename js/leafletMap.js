@@ -81,8 +81,10 @@ class LeafletMap {
     vis.Dots = vis.svg.selectAll('circle')
                     .data(vis.data) 
                     .join('circle')
-                        .attr("fill", "steelblue")  //---- TO DO- color by magnitude 
                         .attr("stroke", "black")
+                        .attr("fill", d => vis.colorScale(d.mag))
+                        .attr("r", d => vis.rScale(d.mag))
+
                         //Leaflet has to take control of projecting points. 
                         //Here we are feeding the latitude and longitude coordinates to
                         //leaflet so that it can project them on the coordinates of the view. 
@@ -90,7 +92,6 @@ class LeafletMap {
                         //We have to select the the desired one using .x or .y
                         .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).x)
                         .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).y) 
-                        .attr("r", d=> 3)  // --- TO DO- want to make radius proportional to earthquake size? 
                         .on('mouseover', function(event,d) { //function to add mouseover event
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
