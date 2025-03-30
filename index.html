@@ -7,22 +7,30 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+  <!-- Map & Controls for the year slider --> 
   <div id="map-container">
     <div id="my-map"></div>
+  
+    <div id="controls">
+      <label for="yearSlider">
+        Year: <span id="yearLabel">2025</span>
+      </label>
+      <input type="range" id="yearSlider" min="1995" max="2025" value="2025" step="1">
+    </div>
   </div>
-  <div id="controls">
-    <label for="yearSlider">Year: <span id="yearLabel">2025</span></label><br>
-    <input type="range" id="yearSlider" min="1995" max="2025" value="2025" step="1">
-  </div>
-  <!-- Chart toggles -->
-  <div>
-    <label><input type="checkbox" class="chart-toggle" value="magnitude" checked> Magnitude</label>
-    <label><input type="checkbox" class="chart-toggle" value="duration" checked> Duration</label>
-    <label><input type="checkbox" class="chart-toggle" value="depth" checked> Depth</label>
-  </div>
+  
+
 
   <!-- Chart containers -->
   <div id="charts-container">
+    <!-- Chart toggles -->
+    <div id="toggle-bar">
+      <label><input type="checkbox" class="chart-toggle" value="magnitude" checked> Magnitude</label>
+      <label><input type="checkbox" class="chart-toggle" value="duration" checked> Duration</label>
+      <label><input type="checkbox" class="chart-toggle" value="depth" checked> Depth</label>
+    </div>
+    <!-- Charts -->
     <div class="chart-box chart-3" id="magnitude-chart"></div>
     <div class="chart-box chart-3" id="duration-chart"></div>
     <div class="chart-box chart-3" id="depth-chart"></div>

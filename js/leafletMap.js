@@ -84,7 +84,6 @@ class LeafletMap {
                         .attr("stroke", "black")
                         .attr("fill", d => vis.colorScale(d.mag))
                         .attr("r", d => vis.rScale(d.mag))
-
                         //Leaflet has to take control of projecting points. 
                         //Here we are feeding the latitude and longitude coordinates to
                         //leaflet so that it can project them on the coordinates of the view. 
@@ -96,15 +95,18 @@ class LeafletMap {
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
                               .attr("fill", "red") //change the fill
-                              .attr('r', 4); //change radius
+                              .attr('r', d => vis.rScale(d.mag) * 1.6); //change radius to 1.6 times the original size (pops out kind of)
 
                             //create a tool tip
                             d3.select('#tooltip')
-                                .style('opacity', 1)
-                                .style('z-index', 1000000)
-                                  // Format number with million and thousand separator
-                                  //***** TO DO- change this tooltip to show useful information about the quakes
-                                .html(`<div class="tooltip-label">City: ${d.city}, Population ${d3.format(',')(d.population)}</div>`);
+                              .style('opacity', 1)
+                              .style('z-index', 1000000)
+                              .html(`
+                                <div><strong>Location:</strong> ${d.place || 'Unknown'}</div>
+                                <div><strong>Magnitude:</strong> ${d.mag}</div>
+                                <div><strong>Depth:</strong> ${d.depth} km</div>
+                                <div><strong>Time:</strong> ${d.time.toLocaleString()}</div>
+                            `);
 
                           })
                         .on('mousemove', (event) => {
@@ -116,8 +118,10 @@ class LeafletMap {
                         .on('mouseleave', function() { //function to add mouseover event
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
-                              .attr("fill", "steelblue") //change the fill  TO DO- change fill again
-                              .attr('r', 3) //change radius
+                              .attr("fill", d => vis.colorScale(d.mag))
+                              .attr("stroke", "black")
+                              .attr("fill", d => vis.colorScale(d.mag))
+                              .attr("r", d => vis.rScale(d.mag))
 
                             d3.select('#tooltip').style('opacity', 0);//turn off the tooltip
 
