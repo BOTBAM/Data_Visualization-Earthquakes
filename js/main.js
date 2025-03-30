@@ -64,6 +64,9 @@ d3.csv("data/4-10M_(1995-today).csv")
       (d) =>
         d.time.getFullYear() === latestMonth.getFullYear() &&
         d.time.getMonth() === latestMonth.getMonth()
+        // Commented out, for now, but can be used later in order to use the dynamic DAY specific logic!
+        // &&
+        // d.day is still preserved here and usable later!
     );
 
     // VERY importand for appropriate map initialization! Please do not move unless confirmed to not cause issues
@@ -83,6 +86,9 @@ d3.csv("data/4-10M_(1995-today).csv")
         (d) =>
           d.time.getFullYear() === selectedMonth.getFullYear() &&
           d.time.getMonth() === selectedMonth.getMonth()
+          // Commented out, for now, but can be used later in order to use the dynamic DAY specific logic!
+          // &&
+          // d.day is still preserved here and usable later!
       );
 
       leafletMap.setData(filteredData);
