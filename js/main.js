@@ -1,7 +1,7 @@
 /**
  * File: main.js
  * Purpose:
- *   - Loads the CSV data (2024-2025.csv) using D3.
+ *   - Dynamically loads and filters earthquake data by month.
  *   - Parses relevant fields and passes the data to the LeafletMap class.
  *   - Acts as the main entry point for bootstrapping the visualization.
  */
@@ -18,23 +18,58 @@ d3.csv('data/4-10M_(1995-today).csv')
       d.longitude = +d.longitude;
       d.depth = +d.depth;
       d.mag = +d.mag;
-      d.time = new Date(d.time);  // Parse date
-      d.year = d.time.getFullYear(); // Extract year for filtering
+      d.time = new Date(d.time);
     });
+    
     fullData = data;
+
+    // --- Generate *dynamically* available months from fullData, we can later expand to dive even deeper (weeks, days, etc.) ---
+    const uniqueMonthsSet = new Set();
+    fullData.forEach(d => {
+      const monthKey = `${d.time.getFullYear()}-${String(d.time.getMonth()).padStart(2, '0')}`;
+      uniqueMonthsSet.add(monthKey);
+    });
+
+    const uniqueMonthsSorted = Array.from(uniqueMonthsSet)
+      .map(key => {
+        const [year, month] = key.split('-');
+        return new Date(+year, +month);
+      })
+      .sort((a, b) => a - b);
+      
     // Initialize with 2025 data
-    const initialData = fullData.filter(d => d.year === 2025);
+    const monthSlider = document.getElementById('monthSlider');
+    const monthLabel = document.getElementById('monthLabel');
+
+    monthSlider.min = 0;
+    monthSlider.max = uniqueMonthsSorted.length - 1;
+    monthSlider.value = uniqueMonthsSorted.length - 1;
+
+    const latestMonth = uniqueMonthsSorted[uniqueMonthsSorted.length - 1];
+    monthLabel.textContent = latestMonth.toLocaleString('default', { month: 'short', year: 'numeric' });
+
+    const initialData = fullData.filter(d =>
+      d.time.getFullYear() === latestMonth.getFullYear() &&
+      d.time.getMonth() === latestMonth.getMonth()
+    );
+    
+    // VERY importand for appropriate map initialization! Please do not move unless confirmed to not cause issues
     leafletMap = new LeafletMap({ parentElement: '#my-map' }, initialData);
 
-    // Hook up slider interaction
-    document.getElementById('yearSlider').addEventListener('input', function() {
-      const selectedYear = +this.value;
-      document.getElementById('yearLabel').textContent = selectedYear;
-    
-      const yearData = fullData.filter(d => d.year === selectedYear);
-      leafletMap.setData(yearData);  // ← now dynamically updates the map!
-    });
+    // Hook up slider interaction (added months)
+    monthSlider.addEventListener('input', function () {
+      const index = +this.value;
+      const selectedMonth = uniqueMonthsSorted[index];
 
+      monthLabel.textContent = selectedMonth.toLocaleString('default', { month: 'short', year: 'numeric' });
+
+      const filteredData = fullData.filter(d =>
+        d.time.getFullYear() === selectedMonth.getFullYear() &&
+        d.time.getMonth() === selectedMonth.getMonth()
+      );
+
+      leafletMap.setData(filteredData);
+    });  
 
 
     // ---- Magnitude Buckets ----
