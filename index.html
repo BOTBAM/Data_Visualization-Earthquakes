@@ -1,48 +1,68 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Interactive map with Leaflet</title>
-  <link rel="icon" href="data:;base64,iVBORwOKGO=" />
-  <link rel="stylesheet" href="css/leaflet.css">
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-
-  <!-- Map & Controls for the year slider --> 
-  <div id="map-container">
-    <div id="my-map"></div>
-  
-    <div id="controls">
-      <label for="monthSlider">Month: <span id="monthLabel"></span></label><br>
-      <input type="range" id="monthSlider">
-    </div>     
-  </div>
-  
-
-
-  <!-- Chart containers -->
-  <div id="charts-container">
-    <!-- Chart toggles -->
-    <div id="toggle-bar">
-      <label><input type="checkbox" class="chart-toggle" value="magnitude" checked> Magnitude</label>
-      <label><input type="checkbox" class="chart-toggle" value="duration" checked> Duration</label>
-      <label><input type="checkbox" class="chart-toggle" value="depth" checked> Depth</label>
+  <head>
+    <title>Interactive map with Leaflet</title>
+    <link rel="icon" href="data:;base64,iVBORwOKGO=" />
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- <button class="floating" onclick="toggle()">Toggle</button> -->
+    <div class="container">
+      <button class="floating-btn" onclick="toggle()">Toggle</button>
     </div>
-    <!-- Charts -->
-    <div class="chart-box chart-3" id="magnitude-chart"></div>
-    <div class="chart-box chart-3" id="duration-chart"></div>
-    <div class="chart-box chart-3" id="depth-chart"></div>
-  </div>
 
-  <!-- Scripts -->
-  <script src="js/d3.v6.min.js"></script>
-  <script src="js/leaflet.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/leafletMap.js"></script>
+    <div class="layout">
+      <div>
+        
+        <div id="map-container">
+          <div id="my-map"></div>
+        </div>
+        
+        <div id="controls">
+          <label for="monthSlider">Month: <span id="monthLabel"></span></label><br>
+          <input type="range" id="monthSlider">
+        </div> 
+        
+        <div id="time-series-chart"></div>
+      </div>
 
+
+      <!-- Chart containers -->
+      <div id="charts-container">
+        <div class="chart-box chart-3" id="magnitude-chart"></div>
+        <div class="chart-box chart-3" id="duration-chart"></div>
+        <div class="chart-box chart-3" id="depth-chart"></div>
+      </div>
+    </div>
+
+    <div id="chart-toggle">
+      <label
+        ><input
+          type="checkbox"
+          class="chart-toggle"
+          value="magnitude"
+          checked
+        />
+        Magnitude</label
+      >
+      <label
+        ><input type="checkbox" class="chart-toggle" value="duration" checked />
+        Duration</label
+      >
+      <label
+        ><input type="checkbox" class="chart-toggle" value="depth" checked />
+        Depth</label
+      >
+    </div>
+    <!-- Scripts -->
+    <script src="js/d3.v6.min.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/leafletMap.js"></script>
+    <script src="js/layout.js"></script>
+
+    <!-- Tooltip for charts -->
     <div id="tooltip"></div>
-
-    
-
-</body>
+  </body>
 </html>
