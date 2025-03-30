@@ -24,6 +24,7 @@ d3.csv("data/4-10M_(1995-today).csv")
     // Initialize with 2025 data
     const initialData = fullData.filter((d) => d.year === 2025);
     leafletMap = new LeafletMap({ parentElement: "#my-map" }, initialData);
+    updateEarthquakeChart(new Date("2015-01-01"), new Date("2016-01-31"));
 
     // Hook up slider interaction
     document
@@ -247,3 +248,75 @@ document.querySelectorAll(".chart-toggle").forEach((toggle) => {
     });
   });
 });
+
+function updateEarthquakeChart(startDate, endDate) {
+  // Filter earthquakes within the selected date range
+  const filteredData = fullData.filter(
+    (d) => d.time >= startDate && d.time <= endDate
+  );
+
+  // Aggregate counts per month
+  const earthquakeCounts = d3.rollup(
+    filteredData,
+    (v) => v.length,
+    (d) => d3.timeFormat("%Y-%m")(d.time) // Format as YYYY-MM for monthly aggregation
+  );
+
+  // Convert to sorted array
+  const data = Array.from(earthquakeCounts, ([date, count]) => ({
+    date,
+    count,
+  })).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  drawTimeSeriesChart(data);
+}
+
+function drawTimeSeriesChart(data) {
+  const container = "#time-series-chart";
+  d3.select(container).select("svg").remove(); // Clear previous chart
+
+  const width = 800,
+    height = 200,
+    margin = { top: 30, right: 30, bottom: 60, left: 70 };
+
+  const svg = d3
+    .select(container)
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const x = d3
+    .scaleBand()
+    .domain(data.map((d) => d.date))
+    .range([margin.left, width - margin.right])
+    .padding(0.1);
+
+  const y = d3
+    .scaleLinear()
+    .domain([0, d3.max(data, (d) => d.count)])
+    .nice()
+    .range([height - margin.bottom, margin.top]);
+
+  svg
+    .append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x).tickFormat((d) => d));
+
+  svg
+    .append("g")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y));
+
+  svg
+    .selectAll("rect")
+    .data(data)
+    .enter()
+    .append("rect")
+    .attr("x", (d) => x(d.date))
+    .attr("y", (d) => y(d.count))
+    .attr("width", x.bandwidth())
+    .attr("height", (d) => height - margin.bottom - y(d.count))
+    .attr("fill", "#206373");
+}
+
+// updateEarthquakeChart(new Date("2015-01-01"), new Date("2016-03-31"));

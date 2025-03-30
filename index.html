@@ -13,21 +13,25 @@
     </div>
 
     <div class="layout">
-      <div id="map-container">
-        <div id="my-map"></div>
+      <div>
+        <div id="map-container">
+          <div id="my-map"></div>
+        </div>
+        <div id="controls">
+          <label for="yearSlider">Year: <span id="yearLabel">2025</span></label
+          ><br />
+          <input
+            type="range"
+            id="yearSlider"
+            min="1995"
+            max="2025"
+            value="2025"
+            step="1"
+          />
+        </div>
+        <div id="time-series-chart"></div>
       </div>
-      <div id="controls">
-        <label for="yearSlider">Year: <span id="yearLabel">2025</span></label
-        ><br />
-        <input
-          type="range"
-          id="yearSlider"
-          min="1995"
-          max="2025"
-          value="2025"
-          step="1"
-        />
-      </div>
+
       <!-- Chart containers -->
       <div id="charts-container">
         <div class="chart-box chart-3" id="magnitude-chart"></div>
