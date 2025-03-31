@@ -20,10 +20,9 @@
 
 #controls {
   padding: 20px 20px;
-}
-
-#yearSlider {
-  width: 100%; /* now it really means 100% of #map-container */
+  transition: all 0.3s ease-in-out;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .layout {
@@ -139,11 +138,7 @@
   cursor: pointer;
 }
 
-#controls {
-  width: 100%;
-  padding: 10px 0;
-  margin-top: 10px;
-}
+
 
 #controls label {
   display: flex;
@@ -156,37 +151,118 @@
 #monthSlider {
   appearance: none;
   width: 100%;
-  height: 6px;
+  height: 24px;
   background: #ccc;
-  border-radius: 3px;
+  background-color: #eee;
+  border-radius: 12px;
   outline: none;
-  margin: 0;
+  margin: 20px 0;
   padding: 0;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  animation: fadePop 0.3s ease; 
 }
 
 #monthSlider::-webkit-slider-thumb {
   appearance: none;
-  width: 16px;
-  height: 16px;
-  background: #0077b6;
+  width: 18px;
+  height: 18px;
+  background-color: #0077b6;
+  border: 2px solid white;
   border-radius: 50%;
   cursor: pointer;
-  margin-top: -5px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#monthSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background-color: #0096c7;
 }
 
 #monthSlider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: #0077b6;
+  width: 18px;
+  height: 18px;
+  background-color: #0077b6;
+  border: 2px solid white;
   border-radius: 50%;
   cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-#yearSlider {
-  width: 300px;
+#monthSlider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  background-color: #0096c7;
 }
+
+
+
 
 #time-series-chart {
   width: 100%;
   height: 500px;
+}
+
+
+/* --- Custom Range Slider Styles --- */
+#range-slider {
+  position: relative;
+  height: 24px;
+  margin: 20px 0;
+  background-color: #eee;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+#range-track {
+  position: absolute;
+  height: 6px;
+  top: 50%;
+  left: 0;
+  right: 0;
+  background: #ccc;
+  transform: translateY(-50%);
+  border-radius: 3px;
+}
+
+#range-labels {
+  display: flex;
+  justify-content:;
+  font-size: 14px;
+  font-weight: bold;
+  color: #444;
+  padding: 4px 2px;
+  animation: fadePop 0.3s ease;
+}
+
+@keyframes fadePop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.range-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  background-color: #0077b6;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: grab;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.range-thumb:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+  background-color: #0096c7;
 }
