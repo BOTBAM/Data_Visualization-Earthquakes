@@ -113,7 +113,7 @@ d3.csv("data/4-10M_(1995-today).csv")
       if (!isRangeMode) expandToCustomRangeSlider();
     });
 
-    // --- On initial load, also show corresponding magnitude/duration/depth charts ---
+    // --- On initial load, also show corresponding magnitude/depth charts ---
     updateAllCharts(initialData);
   })
   .catch((error) => console.error(error)); // Catch and log any CSV loading issues
@@ -291,16 +291,6 @@ function drawMagnitudeChart(dataObj) {
     "Magnitude"
   );
 }
-function drawDurationChart(dataObj) {
-  drawBarChart(
-    "#duration-chart",
-    dataObj,
-    "#e5c852",
-    "#0ed354",
-    "Estimated Duration of Earthquakes",
-    "Duration (seconds)"
-  );
-}
 function drawDepthChart(dataObj) {
   drawBarChart(
     "#depth-chart",
@@ -401,7 +391,6 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
       update.call((update) =>
         update
           .transition()
-          .duration(600)
           .delay((d, i) => i * 30) // Delay each bar by 30ms per index
           .ease(d3.easeCubicInOut)
           .attr("y", (d) => y(d.value)) // new top
@@ -412,7 +401,6 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
       exit.call((exit) =>
         exit
           .transition()
-          .duration(300)
           .attr("y", y(0))
           .attr("height", 0)
           .remove()
@@ -423,7 +411,7 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
   // Tooltip interaction
   bars
     .on("mouseover", function (event, d) {
-      d3.select(this).transition().duration(150).attr("fill", hoverColor);
+      d3.select(this).transition().attr("fill", hoverColor);
 
       d3.select("#tooltip")
         .style("opacity", 1)
@@ -436,7 +424,7 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
         .style("top", event.pageY + 10 + "px");
     })
     .on("mouseleave", function () {
-      d3.select(this).transition().duration(150).attr("fill", color);
+      d3.select(this).transition().attr("fill", color);
 
       d3.select("#tooltip").style("opacity", 0);
     });
@@ -451,7 +439,6 @@ document.querySelectorAll(".chart-toggle").forEach((toggle) => {
 
     const chartIds = {
       magnitude: "magnitude-chart",
-      duration: "duration-chart",
       depth: "depth-chart",
     };
 
@@ -609,11 +596,9 @@ function drawTimeSeriesChart(data, startDate, endDate) {
 // Added update function to pass currently selected data
 function updateAllCharts(data) {
   d3.select("#magnitude-chart").select("svg").remove();
-  d3.select("#duration-chart").select("svg").remove();
   d3.select("#depth-chart").select("svg").remove();
 
   drawMagnitudeChart(getMagnitudeBuckets(data));
-  drawDurationChart(getDurationBuckets(data));
   drawDepthChart(getDepthBuckets(data));
 }
 
@@ -635,27 +620,6 @@ function getMagnitudeBuckets(data) {
     else if (mag >= 6 && mag < 7) buckets["6.0–6.9"]++;
     else if (mag >= 7 && mag < 8) buckets["7.0–7.9"]++;
     else if (mag >= 8) buckets["8.0+"]++;
-  });
-
-  return buckets;
-}
-
-function getDurationBuckets(data) {
-  const buckets = {
-    "<10s": 0,
-    "10–30s": 0,
-    "30–60s": 0,
-    "60–120s": 0,
-    "120s+": 0,
-  };
-
-  data.forEach((d) => {
-    const duration = Math.pow(10, 0.5 * d.mag);
-    if (duration < 10) buckets["<10s"]++;
-    else if (duration < 30) buckets["10–30s"]++;
-    else if (duration < 60) buckets["30–60s"]++;
-    else if (duration < 120) buckets["60–120s"]++;
-    else buckets["120s+"]++;
   });
 
   return buckets;

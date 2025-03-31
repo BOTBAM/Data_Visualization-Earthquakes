@@ -112,7 +112,6 @@ class LeafletMap {
         //function to add mouseover event
         d3.select(this)
           .transition() //D3 selects the object we have moused over in order to perform operations on it
-          .duration("150") //how long we are transitioning between the two states (works like keyframes)
           .attr("fill", "red") //change the fill
           .attr("r", (d) => vis.rScale(d.mag) * 1.6); //change radius to 1.6 times the original size (pops out kind of)
 
@@ -139,7 +138,6 @@ class LeafletMap {
         //function to add mouseover event
         d3.select(this)
           .transition() //D3 selects the object we have moused over in order to perform operations on it
-          .duration("150") //how long we are transitioning between the two states (works like keyframes)
           .attr("fill", (d) => vis.colorScale(d.mag))
           .attr("stroke", "black")
           .attr("fill", (d) => vis.colorScale(d.mag))
@@ -188,7 +186,6 @@ class LeafletMap {
             .on("mouseover", function (event, d) {
               d3.select(this)
                 .transition()
-                .duration(150)
                 .attr("fill", "red")
                 .attr("r", 4);
 
@@ -210,7 +207,6 @@ class LeafletMap {
             .on("mouseleave", function () {
               d3.select(this)
                 .transition()
-                .duration(150)
                 .attr("fill", (d) => vis.colorScale(d.mag))
                 .attr("r", (d) => vis.rScale(d.mag));
 
