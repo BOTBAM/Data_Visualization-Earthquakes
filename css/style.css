@@ -8,14 +8,14 @@
   transition: width 2s;
   margin: 0px;
   border: 1px solid red;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 #my-map {
   width: 140%;
   height: 100%;
   margin: 0 auto;
-  margin-bottom: 40px; 
+  margin-bottom: 40px;
 }
 
 #controls {
@@ -82,7 +82,7 @@
   width: 100%;
   z-index: 10;
   text-align: center;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 /* Each chart container */
 .chart-box {
@@ -138,8 +138,6 @@
   cursor: pointer;
 }
 
-
-
 #controls label {
   display: flex;
   justify-content: space-between;
@@ -159,9 +157,9 @@
   margin: 20px 0;
   padding: 0;
   position: relative;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
-  animation: fadePop 0.3s ease; 
+  animation: fadePop 0.3s ease;
 }
 
 #monthSlider::-webkit-slider-thumb {
@@ -197,14 +195,10 @@
   background-color: #0096c7;
 }
 
-
-
-
 #time-series-chart {
   width: 100%;
   height: 500px;
 }
-
 
 /* --- Custom Range Slider Styles --- */
 #range-slider {
@@ -213,7 +207,7 @@
   margin: 20px 0;
   background-color: #eee;
   border-radius: 12px;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 #range-track {
@@ -229,7 +223,6 @@
 
 #range-labels {
   display: flex;
-  justify-content:;
   font-size: 14px;
   font-weight: bold;
   color: #444;
@@ -259,7 +252,7 @@
   border-radius: 50%;
   cursor: grab;
   transition: transform 0.2s ease, background-color 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .range-thumb:hover {

@@ -28,20 +28,22 @@ d3.csv("data/4-10M_(1995-today).csv")
 
       // Extract useful date components (used later for filtering/bucketing)
       d.year = d.time.getFullYear();
-      d.month = d.time.getMonth();     // 0-based (Jan = 0)
-      d.day = d.time.getDate();        // 1–31
+      d.month = d.time.getMonth(); // 0-based (Jan = 0)
+      d.day = d.time.getDate(); // 1–31
     });
 
     // Store the cleaned dataset in a global variable
     fullData = data;
 
     // --- Initialize time series chart with a default range for first load ---
-    updateEarthquakeChart(new Date("2015-01-01"), new Date("2016-03-31"));
+    updateEarthquakeChart(new Date("2015-01-01"), new Date("2015-01-31"));
 
     // --- Build a Set of unique months across the dataset ---
     const uniqueMonthsSet = new Set();
     fullData.forEach((d) => {
-      const monthKey = `${d.time.getFullYear()}-${String(d.time.getMonth()).padStart(2, "0")}`;
+      const monthKey = `${d.time.getFullYear()}-${String(
+        d.time.getMonth()
+      ).padStart(2, "0")}`;
       uniqueMonthsSet.add(monthKey); // Format: "YYYY-MM"
     });
 
@@ -92,12 +94,14 @@ d3.csv("data/4-10M_(1995-today).csv")
         const filteredData = fullData.filter(
           (d) =>
             d.time.getFullYear() === selectedMonth.getFullYear() &&
-            d.time.getMonth() === selectedMonth.getMonth()
+            d.time.getMonth() === selectedMonth.getMonth() &&
+            d.time.getDate() === selectedMonth.getDate()
         );
 
         // Push filtered data to map and charts
         leafletMap.setData(filteredData);
         updateEarthquakeChart(selectedMonth, selectedMonth);
+        console.log("First " + selectedMonth);
         updateAllCharts(filteredData);
       }
     });
@@ -111,7 +115,6 @@ d3.csv("data/4-10M_(1995-today).csv")
     updateAllCharts(initialData);
   })
   .catch((error) => console.error(error)); // Catch and log any CSV loading issues
-
 
 // -------- Utility to format a Date into "Mon YYYY" (e.g., "Jan 2024") for slider labels --------
 function formatMonthLabel(date) {
@@ -175,9 +178,13 @@ function expandToCustomRangeSlider() {
     endLabel.textContent = formatMonthLabel(endDate);
 
     // Filter and display data across full system
-    const filtered = fullData.filter((d) => d.time >= startDate && d.time <= endDate);
+    const filtered = fullData.filter(
+      (d) => d.time >= startDate && d.time <= endDate
+    );
     leafletMap.setData(filtered);
     updateEarthquakeChart(startDate, endDate);
+    console.log("Second, Start: " + startDate + " end: " + endDate);
+
     updateAllCharts(filtered);
 
     // If both thumbs touch, collapse back into single slider
@@ -415,10 +422,7 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
   // Tooltip interaction
   bars
     .on("mouseover", function (event, d) {
-      d3.select(this)
-        .transition()
-        .duration(150)
-        .attr("fill", hoverColor);
+      d3.select(this).transition().duration(150).attr("fill", hoverColor);
 
       d3.select("#tooltip")
         .style("opacity", 1)
@@ -431,10 +435,7 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
         .style("top", event.pageY + 10 + "px");
     })
     .on("mouseleave", function () {
-      d3.select(this)
-        .transition()
-        .duration(150)
-        .attr("fill", color);
+      d3.select(this).transition().duration(150).attr("fill", color);
 
       d3.select("#tooltip").style("opacity", 0);
     });
@@ -468,17 +469,37 @@ document.querySelectorAll(".chart-toggle").forEach((toggle) => {
 });
 
 function updateEarthquakeChart(startDate, endDate) {
-  // Filter earthquakes within the selected date range
+  // Filters the earthquakes within the selected date range
+
+  startDate = new Date(startDate);
+  endDate = new Date(endDate);
+
   const filteredData = fullData.filter(
     (d) => d.time >= startDate && d.time <= endDate
   );
 
-  // Aggregate counts per month
-  const earthquakeCounts = d3.rollup(
-    filteredData,
-    (v) => v.length,
-    (d) => d3.timeFormat("%Y-%m")(d.time) // Format as YYYY-MM for monthly aggregation
-  );
+  // Determine the time difference
+  const timeDiff = endDate - startDate;
+  const daysDiff = timeDiff / (1000 * 60 * 60 * 24); // Convert to days
+
+  // Determine aggregation level
+  let timeFormat, groupBy;
+  if (daysDiff <= 31) {
+    // If range is within a month, group by day
+    timeFormat = "%Y-%m-%d";
+    groupBy = (d) => d3.timeFormat(timeFormat)(d.time);
+  } else if (daysDiff <= 730) {
+    // If range is within ~2 years, group by month
+    timeFormat = "%Y-%m";
+    groupBy = (d) => d3.timeFormat(timeFormat)(d.time);
+  } else {
+    // If range is longer, group by year or every few months
+    timeFormat = "%Y";
+    groupBy = (d) => d3.timeFormat(timeFormat)(d.time);
+  }
+
+  // Aggregate counts
+  const earthquakeCounts = d3.rollup(filteredData, (v) => v.length, groupBy);
 
   // Convert to sorted array
   const data = Array.from(earthquakeCounts, ([date, count]) => ({
@@ -486,16 +507,16 @@ function updateEarthquakeChart(startDate, endDate) {
     count,
   })).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  drawTimeSeriesChart(data);
+  drawTimeSeriesChart(data, startDate, endDate);
 }
 
-function drawTimeSeriesChart(data) {
+function drawTimeSeriesChart(data, startDate, endDate) {
   const container = "#time-series-chart";
   d3.select(container).select("svg").remove(); // Clear previous chart
 
   const width = 800,
-    height = 200,
-    margin = { top: 30, right: 30, bottom: 60, left: 70 };
+    height = 300,
+    margin = { top: 30, right: 30, bottom: 80, left: 70 };
 
   const svg = d3
     .select(container)
@@ -503,6 +524,23 @@ function drawTimeSeriesChart(data) {
     .attr("width", width)
     .attr("height", height);
 
+  // Calculate the range in days
+  const timeDiff = endDate - startDate;
+  const daysDiff = timeDiff / (1000 * 60 * 60 * 24); // Convert to days
+
+  let tickFormat, tickInterval;
+  if (daysDiff <= 31) {
+    tickFormat = "%d %b"; // Day and month (e.g., "01 Jan")
+    tickInterval = Math.ceil(data.length / 7); // Show every 5-7 days
+  } else if (daysDiff <= 730) {
+    tickFormat = "%b %Y"; // Month and year (e.g., "Jan 2016")
+    tickInterval = Math.ceil(data.length / 10); // Show every 2-3 months
+  } else {
+    tickFormat = "%Y"; // Year only
+    tickInterval = Math.ceil(data.length / 10); // Show every 1-2 years
+  }
+
+  // Define scales
   const x = d3
     .scaleBand()
     .domain(data.map((d) => d.date))
@@ -515,16 +553,32 @@ function drawTimeSeriesChart(data) {
     .nice()
     .range([height - margin.bottom, margin.top]);
 
+  // X-axis with dynamic tick selection
+  const xAxis = d3
+    .axisBottom(x)
+    .tickValues(
+      data
+        .map((d, i) => (i % tickInterval === 0 ? d.date : null))
+        .filter((d) => d)
+    )
+    .tickFormat((d) => d3.timeFormat(tickFormat)(new Date(d)));
+
   svg
     .append("g")
     .attr("transform", `translate(0,${height - margin.bottom})`)
-    .call(d3.axisBottom(x).tickFormat((d) => d));
+    .call(xAxis)
+    .selectAll("text")
+    .attr("text-anchor", "end") // Rotate text for readability
+    .attr("transform", "rotate(-25)")
+    .style("font-size", "12px");
 
+  // Y-axis
   svg
     .append("g")
     .attr("transform", `translate(${margin.left},0)`)
     .call(d3.axisLeft(y));
 
+  // Draw bars
   svg
     .selectAll("rect")
     .data(data)
@@ -537,8 +591,6 @@ function drawTimeSeriesChart(data) {
     .attr("fill", "#ff6600");
 }
 
-
-
 // Added update function to pass currently selected data
 function updateAllCharts(data) {
   d3.select("#magnitude-chart").select("svg").remove();
@@ -549,7 +601,6 @@ function updateAllCharts(data) {
   drawDurationChart(getDurationBuckets(data));
   drawDepthChart(getDepthBuckets(data));
 }
-
 
 function getMagnitudeBuckets(data) {
   const buckets = {
@@ -615,3 +666,68 @@ function getDepthBuckets(data) {
 
   return buckets;
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+  const monthSlider = document.getElementById("monthSlider");
+  const monthLabel = document.getElementById("monthLabel");
+  const animateButton = document.getElementById("animation-btn");
+  animateButton.textContent = "Animate";
+  // animateButton.classList.add("floating-btn");
+  document.getElementById("controls").appendChild(animateButton);
+
+  let animationInterval;
+  let animationSpeed = 500; // in milliseconds
+  let isAnimating = false;
+
+  function updateMonthLabel() {
+    monthLabel.textContent = monthSlider.value;
+  }
+
+  function startAnimation() {
+    if (isAnimating) return;
+    isAnimating = true;
+    animateButton.textContent = "Stop";
+    let currentValue = parseInt(monthSlider.min);
+    const maxValue = parseInt(monthSlider.max);
+
+    monthSlider.value = currentValue;
+    updateMonthLabel();
+
+    animationInterval = setInterval(() => {
+      if (currentValue >= maxValue) {
+        clearInterval(animationInterval);
+        isAnimating = false;
+        animateButton.textContent = "Animate";
+      } else {
+        currentValue++;
+        monthSlider.value = currentValue;
+        updateMonthLabel();
+        // updating the map and charts based on slider value maybeeee
+        updateVisualization(currentValue);
+      }
+    }, animationSpeed);
+  }
+
+  function stopAnimation() {
+    clearInterval(animationInterval);
+    isAnimating = false;
+    animateButton.textContent = "Animate";
+  }
+
+  animateButton.addEventListener("click", function () {
+    if (isAnimating) {
+      stopAnimation();
+    } else {
+      startAnimation();
+    }
+  });
+
+  monthSlider.addEventListener("input", updateMonthLabel);
+
+  function updateVisualization(value) {
+    console.log("Animating to month:", value);
+    // we need to call/add functions to update the map, timeline, and charts
+  }
+
+  updateMonthLabel();
+});
