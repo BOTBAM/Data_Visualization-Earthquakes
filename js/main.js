@@ -111,7 +111,7 @@ d3.csv("data/4-10M_(1995-today).csv")
       if (!isRangeMode) expandToCustomRangeSlider();
     });
 
-    // --- On initial load, also show corresponding magnitude/duration/depth charts ---
+    // --- On initial load, also show corresponding magnitude/depth charts ---
     updateAllCharts(initialData);
   })
   .catch((error) => console.error(error)); // Catch and log any CSV loading issues
@@ -284,7 +284,10 @@ function drawMagnitudeChart(dataObj) {
     "#ff6600",
     "#cc5200",
     "Earthquakes by Magnitude",
-    "Magnitude"
+    "Magnitude",
+
+    
+
   );
 }
 function drawDepthChart(dataObj) {
@@ -299,7 +302,7 @@ function drawDepthChart(dataObj) {
 }
 
 // ---------- Responsive Bar Chart Function ----------
-function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
+function drawBarChart(container, dataObj, color, hoverColor, title, xLabel, onBarClick = null) {
   const data = Object.entries(dataObj).map(([label, value]) => ({
     label,
     value,
@@ -383,7 +386,6 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
           .call((enter) =>
             enter
               .transition()
-              .duration(500)
               .attr("y", (d) => y(d.value))
               .attr("height", (d) => height - margin.bottom - y(d.value))
           ),
@@ -391,7 +393,6 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
         update.call((update) =>
           update
             .transition()
-            .duration(500)
             .attr("x", (d) => x(d.label))
             .attr("y", (d) => y(d.value))
             .attr("width", x.bandwidth())
@@ -402,7 +403,6 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
         exit.call((exit) =>
           exit
             .transition()
-            .duration(300)
             .attr("y", y(0))
             .attr("height", 0)
             .remove()
@@ -412,7 +412,7 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
   // Tooltip interaction
   bars
     .on("mouseover", function (event, d) {
-      d3.select(this).transition().duration(150).attr("fill", hoverColor);
+      d3.select(this).transition().attr("fill", hoverColor);
 
       d3.select("#tooltip")
         .style("opacity", 1)
@@ -425,9 +425,12 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
         .style("top", event.pageY + 10 + "px");
     })
     .on("mouseleave", function () {
-      d3.select(this).transition().duration(150).attr("fill", color);
+      d3.select(this).transition().attr("fill", color);
 
       d3.select("#tooltip").style("opacity", 0);
+    })
+    .on("click", function (event, d) {
+      if (onBarClick) onBarClick(d.label);
     });
 }
 
@@ -583,7 +586,6 @@ function drawTimeSeriesChart(data, startDate, endDate) {
 // Added update function to pass currently selected data
 function updateAllCharts(data) {
   d3.select("#magnitude-chart").select("svg").remove();
-  d3.select("#duration-chart").select("svg").remove();
   d3.select("#depth-chart").select("svg").remove();
 
   drawMagnitudeChart(getMagnitudeBuckets(data));
@@ -608,27 +610,6 @@ function getMagnitudeBuckets(data) {
     else if (mag >= 6 && mag < 7) buckets["6.0–6.9"]++;
     else if (mag >= 7 && mag < 8) buckets["7.0–7.9"]++;
     else if (mag >= 8) buckets["8.0+"]++;
-  });
-
-  return buckets;
-}
-
-function getDurationBuckets(data) {
-  const buckets = {
-    "<10s": 0,
-    "10–30s": 0,
-    "30–60s": 0,
-    "60–120s": 0,
-    "120s+": 0,
-  };
-
-  data.forEach((d) => {
-    const duration = Math.pow(10, 0.5 * d.mag);
-    if (duration < 10) buckets["<10s"]++;
-    else if (duration < 30) buckets["10–30s"]++;
-    else if (duration < 60) buckets["30–60s"]++;
-    else if (duration < 120) buckets["60–120s"]++;
-    else buckets["120s+"]++;
   });
 
   return buckets;
