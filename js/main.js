@@ -12,6 +12,9 @@ let monthsArray = [];
 let isAnimating = false;
 let intervalId = null;
 
+const selectedMagnitudes = new Set();
+const selectedDepths = new Set();
+
 // Load CSV earthquake data asynchronously using D3
 d3.csv("data/4-10M_(1995-today).csv")
   .then((data) => {
@@ -386,7 +389,13 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
         .attr("width", x.bandwidth())
         .attr("y", (d) => y(d.value)) // Start at correct top
         .attr("height", (d) => height - margin.bottom - y(d.value))
-        .attr("fill", color),
+        .attr("fill", (d) => {
+          const selected =
+            (xLabel === "Magnitude" && selectedMagnitudes.has(d.label)) ||
+            (xLabel === "Depth (km)" && selectedDepths.has(d.label));
+          return selected ? hoverColor : color;
+        }),
+        
     (update) =>
       update.call((update) =>
         update
@@ -395,8 +404,13 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
           .ease(d3.easeCubicInOut)
           .attr("y", (d) => y(d.value)) // new top
           .attr("height", (d) => height - margin.bottom - y(d.value)) // new height from new top
-          .attr("fill", color)
-      ),
+          .attr("fill", (d) => {
+            const selected =
+              (xLabel === "Magnitude" && selectedMagnitudes.has(d.label)) ||
+              (xLabel === "Depth (km)" && selectedDepths.has(d.label));
+            return selected ? hoverColor : color;
+          }),
+          
     (exit) =>
       exit.call((exit) =>
         exit
@@ -404,7 +418,7 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
           .attr("y", y(0))
           .attr("height", 0)
           .remove()
-      )
+      ))
   );
 
 
@@ -427,6 +441,23 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
       d3.select(this).transition().attr("fill", color);
 
       d3.select("#tooltip").style("opacity", 0);
+    })
+    .on("click", function (event, d) {
+      const label = d.label;
+      if (xLabel === "Magnitude") {
+        if (selectedMagnitudes.has(label)) {
+          selectedMagnitudes.delete(label);
+        } else {
+          selectedMagnitudes.add(label);
+        }
+      } else if (xLabel === "Depth (km)") {
+        if (selectedDepths.has(label)) {
+          selectedDepths.delete(label);
+        } else {
+          selectedDepths.add(label);
+        }
+      }
+      applyFilters();
     });
 }
 
@@ -688,67 +719,47 @@ document.getElementById("animation-btn").addEventListener("click", () => {
   isAnimating ? stopAnimation() : startAnimation();
 });
 
-// document.addEventListener("DOMContentLoaded", function () {
-//   const monthSlider = document.getElementById("monthSlider");
-//   const monthLabel = document.getElementById("monthLabel");
-//   const animateButton = document.getElementById("animation-btn");
-//   animateButton.textContent = "Animate";
-//   // animateButton.classList.add("floating-btn");
-//   document.getElementById("controls").appendChild(animateButton);
+function applyFilters() {
+  let filtered = fullData;
 
-//   let animationInterval;
-//   let animationSpeed = 500; // in milliseconds
-//   let isAnimating = false;
+  // Filter by selected magnitudes
+  if (selectedMagnitudes.size > 0) {
+    filtered = filtered.filter((d) =>
+      selectedMagnitudes.has(getMagnitudeLabel(d.mag))
+    );
+  }
 
-//   function updateMonthLabel() {
-//     monthLabel.textContent = monthSlider.value;
-//   }
+  // Filter by selected depths
+  if (selectedDepths.size > 0) {
+    filtered = filtered.filter((d) =>
+      selectedDepths.has(getDepthLabel(d.depth))
+    );
+  }
 
-//   function startAnimation() {
-//     if (isAnimating) return;
-//     isAnimating = true;
-//     animateButton.textContent = "Stop";
-//     let currentValue = parseInt(monthSlider.min);
-//     const maxValue = parseInt(monthSlider.max);
+  // Push filtered data to map and charts
+  leafletMap.setData(filtered);
 
-//     monthSlider.value = currentValue;
-//     updateMonthLabel();
+  const minDate = d3.min(filtered, (d) => d.time);
+  const maxDate = d3.max(filtered, (d) => d.time);
+  updateEarthquakeChart(minDate || new Date("1995-01-01"), maxDate || new Date());
+  updateAllCharts(filtered);
+}
 
-//     animationInterval = setInterval(() => {
-//       if (currentValue >= maxValue) {
-//         clearInterval(animationInterval);
-//         isAnimating = false;
-//         animateButton.textContent = "Animate";
-//       } else {
-//         currentValue++;
-//         monthSlider.value = currentValue;
-//         updateMonthLabel();
-//         // updating the map and charts based on slider value maybeeee
-//         updateVisualization(currentValue);
-//       }
-//     }, animationSpeed);
-//   }
+function getMagnitudeLabel(mag) {
+  if (mag >= 3 && mag < 4) return "3.0–3.9";
+  if (mag >= 4 && mag < 5) return "4.0–4.9";
+  if (mag >= 5 && mag < 6) return "5.0–5.9";
+  if (mag >= 6 && mag < 7) return "6.0–6.9";
+  if (mag >= 7 && mag < 8) return "7.0–7.9";
+  if (mag >= 8) return "8.0+";
+  return "Other";
+}
 
-//   function stopAnimation() {
-//     clearInterval(animationInterval);
-//     isAnimating = false;
-//     animateButton.textContent = "Animate";
-//   }
-
-//   animateButton.addEventListener("click", function () {
-//     if (isAnimating) {
-//       stopAnimation();
-//     } else {
-//       startAnimation();
-//     }
-//   });
-
-//   monthSlider.addEventListener("input", updateMonthLabel);
-
-//   function updateVisualization(value) {
-//     console.log("Animating to month:", value);
-//     // we need to call/add functions to update the map, timeline, and charts
-//   }
-
-//   updateMonthLabel(); // Set initial label
-// });
+function getDepthLabel(depth) {
+  if (depth >= 0 && depth < 10) return "0–10km";
+  if (depth >= 10 && depth < 30) return "10–30km";
+  if (depth >= 30 && depth < 70) return "30–70km";
+  if (depth >= 70 && depth < 300) return "70–300km";
+  if (depth >= 300) return "300km+";
+  return "Other";
+}
