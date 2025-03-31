@@ -58,9 +58,16 @@ class LeafletMap {
     });
 
     vis.theMap = L.map("my-map", {
-      center: [30, 0],
-      zoom: 2,
+      center: [20, 150],
+      zoom: 2.4,
       layers: [vis.base_layer],
+      maxBounds: [
+        [-185, -310], // Southwest corner of bounds
+        [185, 370], // Northeast corner of bounds
+      ],
+      maxBoundsViscosity: 0.2, // How strongly bounds are enforced (1 = strict)
+      minZoom: 2, // Prevent zooming out too far
+      maxZoom: 8, // Optional: prevent zooming in too far
     });
     // (2) CREATE SCALES FOR MAGNITUDE -> COLOR & RADIUS
     vis.colorScale = d3

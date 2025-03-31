@@ -147,13 +147,14 @@ function expandToCustomRangeSlider() {
   // Replace slider HTML with custom dual-thumb range controls
   const controls = document.getElementById("controls");
   controls.innerHTML = `
-    <div id="range-labels">
-      <span id="rangeStartLabel"></span> - <span id="rangeEndLabel"></span>
-    </div>
     <div id="range-slider">
       <div id="range-track"></div>
       <div id="thumb-start" class="range-thumb"></div>
       <div id="thumb-end" class="range-thumb"></div>
+    </div>
+    <div id="range-labels" style="margin-top: 6px; text-align: center;">
+      <span id="rangeStartLabel" style="font-weight: bold;"></span> - 
+      <span id="rangeEndLabel" style="font-weight: bold;"></span>
     </div>
   `;
 
@@ -238,8 +239,8 @@ function collapseToSingleSlider(index) {
   // Replace the controls with a standard slider and label
   const controls = document.getElementById("controls");
   controls.innerHTML = `
-    <label for="monthSlider">Month: <span id="monthLabel"></span></label><br>
     <input type="range" id="monthSlider">
+    <label for="monthSlider">Month: <span id="monthLabel"></span></label><br>
   `;
 
   const monthSlider = document.getElementById("monthSlider");
@@ -385,45 +386,39 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
 
   // Bars (with transitions and join pattern)
   const bars = svg
-    .selectAll("rect")
-    .data(data, (d) => d.label)
-    .join(
-      (enter) =>
-        enter
-          .append("rect")
-          .attr("x", (d) => x(d.label))
-          .attr("width", x.bandwidth())
-          .attr("y", (d) => y(d.value)) // initial height in place (for smoother transitions)
-          .attr("height", 1) // Start collapsed
+  .selectAll("rect")
+  .data(data, (d) => d.label)
+  .join(
+    (enter) =>
+      enter
+        .append("rect")
+        .attr("x", (d) => x(d.label))
+        .attr("width", x.bandwidth())
+        .attr("y", (d) => y(d.value)) // Start at correct top
+        .attr("height", (d) => height - margin.bottom - y(d.value))
+        .attr("fill", color),
+    (update) =>
+      update.call((update) =>
+        update
+          .transition()
+          .duration(600)
+          .delay((d, i) => i * 30) // Delay each bar by 30ms per index
+          .ease(d3.easeCubicInOut)
+          .attr("y", (d) => y(d.value)) // new top
+          .attr("height", (d) => height - margin.bottom - y(d.value)) // new height from new top
           .attr("fill", color)
-          .call((enter) =>
-            enter
-              .transition()
-              .duration(500)
-              .attr("y", (d) => y(d.value))
-              .attr("height", (d) => height - margin.bottom - y(d.value))
-          ),
-      (update) =>
-        update.call((update) =>
-          update
-            .transition()
-            .duration(500)
-            .attr("x", (d) => x(d.label))
-            .attr("y", (d) => y(d.value))
-            .attr("width", x.bandwidth())
-            .attr("height", (d) => height - margin.bottom - y(d.value))
-            .attr("fill", color)
-        ),
-      (exit) =>
-        exit.call((exit) =>
-          exit
-            .transition()
-            .duration(300)
-            .attr("y", y(0))
-            .attr("height", 0)
-            .remove()
-        )
-    );
+      ),
+    (exit) =>
+      exit.call((exit) =>
+        exit
+          .transition()
+          .duration(300)
+          .attr("y", y(0))
+          .attr("height", 0)
+          .remove()
+      )
+  );
+
 
   // Tooltip interaction
   bars
