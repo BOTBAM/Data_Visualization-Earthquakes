@@ -66,7 +66,7 @@ class LeafletMap {
     vis.theMap = L.map("my-map", {
       center: [20, 150],
       zoom: 2.4,
-      layers: [vis.baseLayers["Topographic (OpenTopoMap)"]],
+      layers: [vis.baseLayers["Satellite (ESRI)"]],
       maxBounds: [
         [-185, -310], // Southwest corner of bounds
         [185, 370], // Northeast corner of bounds
