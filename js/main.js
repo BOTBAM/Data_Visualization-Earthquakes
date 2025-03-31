@@ -622,7 +622,44 @@ function drawTimeSeriesChart(data, startDate, endDate) {
     .attr("width", x.bandwidth())
     .attr("height", (d) => height - margin.bottom - y(d.count))
     .attr("fill", "#01d1ff");
+
+    // Step 1: Add brushing behavior
+  const brush = d3.brushX()
+  .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
+  .on("end", brushed);
+
+  svg.append("g")
+  .attr("class", "brush")
+  .call(brush);
+
 }
+
+function brushed({ selection }) {
+  if (!selection) return;
+
+  const [x0, x1] = selection;
+  const datesInView = d3.select("#time-series-chart svg")
+    .selectAll("rect")
+    .filter(function(d) {
+      const xPos = +d3.select(this).attr("x");
+      return xPos >= x0 && xPos <= x1;
+    })
+    .data()
+    .map(d => new Date(d.date));
+
+  if (datesInView.length === 0) return;
+
+  const minDate = d3.min(datesInView);
+  const maxDate = d3.max(datesInView);
+
+  // Filter full dataset
+  const filtered = fullData.filter(d => d.time >= minDate && d.time <= maxDate);
+
+  // Update all views
+  leafletMap.setData(filtered);
+  updateAllCharts(filtered);
+}
+
 
 // Added update function to pass currently selected data
 function updateAllCharts(data) {
