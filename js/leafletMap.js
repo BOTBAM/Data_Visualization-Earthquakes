@@ -81,8 +81,9 @@ class LeafletMap {
     vis.Dots = vis.svg.selectAll('circle')
                     .data(vis.data) 
                     .join('circle')
-                        .attr("fill", "steelblue")  //---- TO DO- color by magnitude 
                         .attr("stroke", "black")
+                        .attr("fill", d => vis.colorScale(d.mag))
+                        .attr("r", d => vis.rScale(d.mag))
                         //Leaflet has to take control of projecting points. 
                         //Here we are feeding the latitude and longitude coordinates to
                         //leaflet so that it can project them on the coordinates of the view. 
@@ -90,20 +91,22 @@ class LeafletMap {
                         //We have to select the the desired one using .x or .y
                         .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).x)
                         .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).y) 
-                        .attr("r", d=> 3)  // --- TO DO- want to make radius proportional to earthquake size? 
                         .on('mouseover', function(event,d) { //function to add mouseover event
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
                               .attr("fill", "red") //change the fill
-                              .attr('r', 4); //change radius
+                              .attr('r', d => vis.rScale(d.mag) * 1.6); //change radius to 1.6 times the original size (pops out kind of)
 
                             //create a tool tip
                             d3.select('#tooltip')
-                                .style('opacity', 1)
-                                .style('z-index', 1000000)
-                                  // Format number with million and thousand separator
-                                  //***** TO DO- change this tooltip to show useful information about the quakes
-                                .html(`<div class="tooltip-label">City: ${d.city}, Population ${d3.format(',')(d.population)}</div>`);
+                              .style('opacity', 1)
+                              .style('z-index', 1000000)
+                              .html(`
+                                <div><strong>Location:</strong> ${d.place || 'Unknown'}</div>
+                                <div><strong>Magnitude:</strong> ${d.mag}</div>
+                                <div><strong>Depth:</strong> ${d.depth} km</div>
+                                <div><strong>Time:</strong> ${d.time.toLocaleString()}</div>
+                            `);
 
                           })
                         .on('mousemove', (event) => {
@@ -115,8 +118,10 @@ class LeafletMap {
                         .on('mouseleave', function() { //function to add mouseover event
                             d3.select(this).transition() //D3 selects the object we have moused over in order to perform operations on it
                               .duration('150') //how long we are transitioning between the two states (works like keyframes)
-                              .attr("fill", "steelblue") //change the fill  TO DO- change fill again
-                              .attr('r', 3) //change radius
+                              .attr("fill", d => vis.colorScale(d.mag))
+                              .attr("stroke", "black")
+                              .attr("fill", d => vis.colorScale(d.mag))
+                              .attr("r", d => vis.rScale(d.mag))
 
                             d3.select('#tooltip').style('opacity', 0);//turn off the tooltip
 
@@ -129,22 +134,63 @@ class LeafletMap {
 
   }
 
+  setData(newData) {
+    this.data = newData;
+    this.updateVis(); // Re-render everything when switching years 
+  }
+  
   updateVis() {
     let vis = this;
+  
+    // Update scales in case magnitude range changed
+    vis.colorScale.domain(d3.extent(vis.data, d => d.mag));
+    vis.rScale.domain(d3.extent(vis.data, d => d.mag));
+  
+    // Re-bind circles to new data
+    vis.Dots = vis.svg.selectAll('circle')
+      .data(vis.data, d => d.id) // use a key if available to help D3 track elements
+      .join(
+        enter => enter.append('circle')
+          .attr("stroke", "black")
+          .attr("fill", d => vis.colorScale(d.mag))
+          .attr("r", d => vis.rScale(d.mag))
+          .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).x)
+          .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).y)
+          .on('mouseover', function(event,d) {
+              d3.select(this).transition().duration(150).attr("fill", "red").attr('r', 4);
+  
+              d3.select('#tooltip')
+                .style('opacity', 1)
+                .style('z-index', 1000000)
+                .html(`
+                  <div><strong>Location:</strong> ${d.place || 'Unknown'}</div>
+                  <div><strong>Magnitude:</strong> ${d.mag}</div>
+                  <div><strong>Depth:</strong> ${d.depth} km</div>
+                  <div><strong>Time:</strong> ${d.time.toLocaleString()}</div>
+                `);
 
-    //want to see how zoomed in you are? 
-    // console.log(vis.map.getZoom()); //how zoomed am I?
-    //----- maybe you want to use the zoom level as a basis for changing the size of the points... ?
-    
-   
-   //redraw based on new zoom- need to recalculate on-screen position
-    vis.Dots
-      .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).x)
-      .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude,d.longitude]).y)
-      .attr("fill", d => vis.colorScale(d.mag))
-      .attr("r", d => vis.rScale(d.mag));
-
+          })
+          .on('mousemove', (event) => {
+              d3.select('#tooltip')
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY + 10) + 'px');
+          })
+          .on('mouseleave', function() {
+              d3.select(this).transition().duration(150)
+                .attr("fill", d => vis.colorScale(d.mag))
+                .attr('r', d => vis.rScale(d.mag));
+  
+              d3.select('#tooltip').style('opacity', 0);
+          }),
+        update => update
+          .attr("fill", d => vis.colorScale(d.mag))
+          .attr("r", d => vis.rScale(d.mag))
+          .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).x)
+          .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).y),
+        exit => exit.remove()
+      );
   }
+  
 
 
   renderVis() {
