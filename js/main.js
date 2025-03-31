@@ -145,13 +145,14 @@ function expandToCustomRangeSlider() {
   // Replace slider HTML with custom dual-thumb range controls
   const controls = document.getElementById("controls");
   controls.innerHTML = `
-    <div id="range-labels">
-      <span id="rangeStartLabel"></span> - <span id="rangeEndLabel"></span>
-    </div>
     <div id="range-slider">
       <div id="range-track"></div>
       <div id="thumb-start" class="range-thumb"></div>
       <div id="thumb-end" class="range-thumb"></div>
+    </div>
+    <div id="range-labels" style="margin-top: 6px; text-align: center;">
+      <span id="rangeStartLabel" style="font-weight: bold;"></span> - 
+      <span id="rangeEndLabel" style="font-weight: bold;"></span>
     </div>
   `;
 
@@ -236,8 +237,8 @@ function collapseToSingleSlider(index) {
   // Replace the controls with a standard slider and label
   const controls = document.getElementById("controls");
   controls.innerHTML = `
-    <label for="monthSlider">Month: <span id="monthLabel"></span></label><br>
     <input type="range" id="monthSlider">
+    <label for="monthSlider">Month: <span id="monthLabel"></span></label><br>
   `;
 
   const monthSlider = document.getElementById("monthSlider");
