@@ -144,8 +144,43 @@ class LeafletMap {
           .attr("r", (d) => vis.rScale(d.mag));
 
         d3.select("#tooltip").style("opacity", 0); //turn off the tooltip
-      });
+      })
 
+      .on("click", function (event, d) {
+        // If this quake is already selected, deselect it
+        const isAlreadySelected = d3.select(this).classed("selected");
+      
+        // Reset all circles
+        vis.Dots
+          .classed("selected", false)
+          .attr("r", (d) => vis.rScale(d.mag))
+          .attr("stroke", "black")
+          .attr("stroke-width", 1);
+      
+        if (!isAlreadySelected) {
+          // Highlight the clicked one
+          d3.select(this)
+            .classed("selected", true)
+            .raise()
+            .transition()
+            .duration(200)
+            .attr("r", vis.rScale(d.mag) * 2)
+            .attr("stroke", "white")
+            .attr("stroke-width", 2);
+      
+          if (typeof highlightLinkedCharts === "function") {
+            highlightLinkedCharts(d); // highlight in timeline + bar chart
+          }
+        } else {
+          // Deselect and remove any highlighting in charts
+          if (typeof clearChartHighlights === "function") {
+            clearChartHighlights(); // optional: write this to reset highlights
+          }
+        }
+      });
+      
+           
+    
     //handler here for updating the map, as you zoom in and out
     vis.theMap.on("zoomend", function () {
       vis.updateVis();

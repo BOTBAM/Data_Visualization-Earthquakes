@@ -763,3 +763,29 @@ function getDepthLabel(depth) {
   if (depth >= 300) return "300km+";
   return "Other";
 }
+
+function highlightLinkedCharts(quake) {
+  const magLabel = getMagnitudeLabel(quake.mag);
+  const depthLabel = getDepthLabel(quake.depth);
+  const quakeDate = quake.time;
+  const timeFormat = "%Y-%m-%d"; // Make sure this matches your shortest time grouping
+  const dateLabel = d3.timeFormat(timeFormat)(quakeDate);
+
+  // Highlight magnitude bar
+  d3.selectAll("#magnitude-chart rect").each(function (d) {
+    const isMatch = d.label === magLabel;
+    d3.select(this).classed("highlighted-bar", isMatch);
+  });
+
+  // Highlight depth bar
+  d3.selectAll("#depth-chart rect").each(function (d) {
+    const isMatch = d.label === depthLabel;
+    d3.select(this).classed("highlighted-bar", isMatch);
+  });
+
+  // Highlight time series bar
+  d3.selectAll("#time-series-chart rect").each(function (d) {
+    const isMatch = d.date === dateLabel;
+    d3.select(this).classed("highlighted-bar", isMatch);
+  });
+}

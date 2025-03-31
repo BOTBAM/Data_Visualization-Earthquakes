@@ -348,3 +348,10 @@ body {
   box-shadow: rgba(60, 64, 67, 0.3) 0 1px 3px 0,
     rgba(60, 64, 67, 0.15) 0 4px 8px 3px;
 }
+
+.highlighted-bar {
+  stroke: rgb(234, 21, 21);
+  stroke-width: 3px;
+  opacity: 1;
+}
+
