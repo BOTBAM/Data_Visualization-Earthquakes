@@ -287,16 +287,6 @@ function drawMagnitudeChart(dataObj) {
     "Magnitude"
   );
 }
-function drawDurationChart(dataObj) {
-  drawBarChart(
-    "#duration-chart",
-    dataObj,
-    "#8e44ad",
-    "#5e3370",
-    "Estimated Duration of Earthquakes",
-    "Duration (seconds)"
-  );
-}
 function drawDepthChart(dataObj) {
   drawBarChart(
     "#depth-chart",
@@ -450,7 +440,6 @@ document.querySelectorAll(".chart-toggle").forEach((toggle) => {
 
     const chartIds = {
       magnitude: "magnitude-chart",
-      duration: "duration-chart",
       depth: "depth-chart",
     };
 
@@ -598,7 +587,6 @@ function updateAllCharts(data) {
   d3.select("#depth-chart").select("svg").remove();
 
   drawMagnitudeChart(getMagnitudeBuckets(data));
-  drawDurationChart(getDurationBuckets(data));
   drawDepthChart(getDepthBuckets(data));
 }
 
