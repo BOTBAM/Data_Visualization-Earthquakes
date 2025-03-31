@@ -164,7 +164,9 @@ class LeafletMap {
           .attr("cx", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).x)
           .attr("cy", d => vis.theMap.latLngToLayerPoint([d.latitude, d.longitude]).y)
           .on('mouseover', function(event,d) {
-              d3.select(this).transition().duration(150).attr("fill", "red").attr('r', 4);
+              d3.select(this).transition()
+              .attr("fill", "red")
+              .attr('r', vis.rScale(d.mag) * 1.6);
   
               d3.select('#tooltip')
                 .style('opacity', 1)
@@ -176,18 +178,25 @@ class LeafletMap {
                   <div><strong>Time:</strong> ${d.time.toLocaleString()}</div>
                 `);
 
-          })
+                const toggle = document.getElementById("linked-quakes-toggle");
+                if (toggle && toggle.checked) {
+                  vis.highlightLinkedQuakes(d);
+                }
+              })
           .on('mousemove', (event) => {
               d3.select('#tooltip')
                 .style('left', (event.pageX + 10) + 'px')
                 .style('top', (event.pageY + 10) + 'px');
           })
           .on('mouseleave', function() {
-              d3.select(this).transition().duration(150)
+              d3.select(this).transition()
                 .attr("fill", d => vis.colorScale(d.mag))
+                .attr("stroke", "black")
                 .attr('r', d => vis.rScale(d.mag));
   
               d3.select('#tooltip').style('opacity', 0);
+              // Reset highlights
+              vis.resetLinkedHighlight();
           }),
         update => update
           .attr("fill", d => vis.colorScale(d.mag))
@@ -204,6 +213,27 @@ class LeafletMap {
     let vis = this;
 
     //not using right now... 
- 
   }
+
+  highlightLinkedQuakes(focusQuake) {
+    let vis = this;
+    const timeWindow = 1000 * 60 * 60 * 12; // ±12 hours
+  
+    vis.Dots.attr("fill", d => {
+      const diff = d.time - focusQuake.time;
+      if (Math.abs(diff) <= timeWindow) {
+        if (diff < 0) return "#1f77b4";     // Blue = Before
+        else if (diff > 0) return "#d62728"; // Red = After
+        else return "#ffae00";               // Yellow = Same time
+      }
+      return "#ccc"; // Dim others
+    });
+  }
+  
+  resetLinkedHighlight() {
+    let vis = this;
+    vis.Dots.attr("fill", d => vis.colorScale(d.mag));
+  }
+  
+
 }
