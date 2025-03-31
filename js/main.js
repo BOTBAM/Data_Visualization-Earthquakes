@@ -285,10 +285,24 @@ function drawMagnitudeChart(dataObj) {
     "#cc5200",
     "Earthquakes by Magnitude",
     "Magnitude",
+    (selectedBucket) => {
+      const filtered = fullData.filter((d) => {
+        const mag = d.mag;
+        if (selectedBucket === "3.0–3.9") return mag >= 3 && mag < 4;
+        if (selectedBucket === "4.0–4.9") return mag >= 4 && mag < 5;
+        if (selectedBucket === "5.0–5.9") return mag >= 5 && mag < 6;
+        if (selectedBucket === "6.0–6.9") return mag >= 6 && mag < 7;
+        if (selectedBucket === "7.0–7.9") return mag >= 7 && mag < 8;
+        if (selectedBucket === "8.0+") return mag >= 8;
+        return false;
+      });
 
-    
-
-  );
+      leafletMap.setData(filtered);
+      updateEarthquakeChart(
+        d3.min(filtered, (d) => d.time),
+        d3.max(filtered, (d) => d.time)
+      );
+    });
 }
 function drawDepthChart(dataObj) {
   drawBarChart(
@@ -297,8 +311,26 @@ function drawDepthChart(dataObj) {
     "#0077b6",
     "#023e8a",
     "Earthquakes by Depth",
-    "Depth (km)"
-  );
+    "Depth (km)",
+    (selectedBucket) => {
+      const filtered = fullData.filter((d) => {
+        const depth = d.depth;
+        if (selectedBucket === "0–10km") return depth >= 0 && depth < 10;
+        if (selectedBucket === "10–30km") return depth >= 10 && depth < 30;
+        if (selectedBucket === "30–70km") return depth >= 30 && depth < 70;
+        if (selectedBucket === "70–300km") return depth >= 70 && depth < 300;
+        if (selectedBucket === "300km+") return depth >= 300;
+        return false;
+      });
+
+      leafletMap.setData(filtered);
+
+      if (filtered.length > 0) {
+        updateEarthquakeChart(
+          d3.min(filtered, (d) => d.time),
+          d3.max(filtered, (d) => d.time)
+        )};
+      });
 }
 
 // ---------- Responsive Bar Chart Function ----------
