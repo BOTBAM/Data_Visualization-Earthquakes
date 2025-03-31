@@ -11,6 +11,8 @@ let isRangeMode = false;
 let monthsArray = [];
 let isAnimating = false;
 let intervalId = null;
+let currentTimeFormat = "%Y-%m-%d"; // default
+
 
 const selectedMagnitudes = new Set();
 const selectedDepths = new Set();
@@ -516,6 +518,7 @@ function updateEarthquakeChart(startDate, endDate) {
     timeFormat = "%Y";
     groupBy = (d) => d3.timeFormat(timeFormat)(d.time);
   }
+  currentTimeFormat = timeFormat; // Save current format
 
   // Aggregate counts
   const earthquakeCounts = d3.rollup(filteredData, (v) => v.length, groupBy);
@@ -805,7 +808,7 @@ function highlightLinkedCharts(quake) {
   const magLabel = getMagnitudeLabel(quake.mag);
   const depthLabel = getDepthLabel(quake.depth);
   const quakeDate = quake.time;
-  const timeFormat = "%Y-%m-%d"; // Make sure this matches your shortest time grouping
+  const timeFormat = currentTimeFormat; // use current granularity // Make sure this matches your shortest time grouping
   const dateLabel = d3.timeFormat(timeFormat)(quakeDate);
 
   // Highlight magnitude bar
@@ -821,8 +824,15 @@ function highlightLinkedCharts(quake) {
   });
 
   // Highlight time series bar
+  // Highlight time series bar
   d3.selectAll("#time-series-chart rect").each(function (d) {
-    const isMatch = d.date === dateLabel;
+    const barDate = d3.timeFormat(currentTimeFormat)(new Date(d.date));
+    const quakeFormattedDate = d3.timeFormat(currentTimeFormat)(quakeDate);
+    const isMatch = barDate === quakeFormattedDate;
+  
     d3.select(this).classed("highlighted-bar", isMatch);
+  
   });
+  
+
 }
