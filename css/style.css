@@ -21,6 +21,7 @@ body {
   margin: 0px;
   overflow: hidden;
   border-radius: 5px;
+  position: relative;
 }
 
 #my-map {
@@ -357,4 +358,44 @@ body {
 .button-17:disabled {
   box-shadow: rgba(60, 64, 67, 0.3) 0 1px 3px 0,
     rgba(60, 64, 67, 0.15) 0 4px 8px 3px;
+}
+
+.floating-dropdown {
+  position: absolute;
+  z-index: 1000;
+  background: #fff0f5; /* light pink background */
+  padding: 4px 8px;
+  border-radius: 6px;
+  background-color: #fb5c6a;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(251, 92, 106, 0.3); /* subtle pink shadow */
+  transition: all 0.2s ease;
+}
+
+/* Position in bottom-left of map */
+.bottom-left {
+  bottom: 12px;
+  left: 12px;
+}
+
+/* Style the dropdown itself */
+.floating-dropdown select {
+  background: #ffe6ec; /* lighter pink */
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff; /* main pink text */
+  background-color: #fb5c6a;
+  padding: 6px 10px;
+  border-radius: 5px;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+/* Hover effect */
+.floating-dropdown select:hover {
+  background-color: #ff4a6e; /* slightly deeper on hover */
 }
