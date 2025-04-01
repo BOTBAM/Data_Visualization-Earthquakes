@@ -312,7 +312,7 @@ body {
   font-family: "Google Sans", Roboto, Arial, sans-serif;
   font-size: 14px;
   font-weight: 500;
-  height: 35px;
+  height: 25px;
   justify-content: center;
   letter-spacing: 0.25px;
   line-height: normal;
@@ -386,7 +386,8 @@ body {
   background: #fff0f5; /* light pink background */
   padding: 4px 8px;
   border-radius: 6px;
-  background-color: #fb5c6a;
+  background-color: #fb5c69b8;
+  border: 1px solid #fb5c69;
   font-family: "Segoe UI", sans-serif;
   font-size: 14px;
   box-shadow: 0 2px 6px rgba(251, 92, 106, 0.3); /* subtle pink shadow */
