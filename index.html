@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+  <!-- Floating Info Button -->
   <head>
     <title>Interactive map with Leaflet</title>
     <link rel="icon" href="data:;base64,iVBORwOKGO=" />
@@ -81,5 +82,23 @@
 
     <!-- Tooltip for charts -->
     <div id="tooltip"></div>
+
+<button id="info-btn" class="corner-float">?</button>
+
+<!-- Popup -->
+<div id="info-popup" class="info-popup hidden">
+  <div class="popup-content">
+    <span id="popup-close" class="popup-close">&times;</span>
+    <h3>How to Use</h3>
+    <p>This map shows earthquakes based on selected date range and filters. 
+      Use Brush Mode to drag-select a region. Use Pan mode to pan across the map. 
+      You can use the fullscreen buttons to make the map larger. Click again to make the map at its orginial size. 
+      You can also change the map type under the mode button with a drop down once clicked.
+       If an earthquake is clicked, red highlights indicate what categories the earthquake falls in the graphs. 
+       The animate button allows you to see the earthquakes over the period of the data set. 
+       You can stop at any time! Feel free to hover over the timeline to get specifics.
+    </p>
+  </div>
+</div>
   </body>
 </html>

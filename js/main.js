@@ -915,3 +915,19 @@ function highlightLinkedCharts(quake) {
     d3.select(this).classed("highlighted-bar", isMatch);
   });
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  const infoBtn = document.getElementById("info-btn");
+  const infoPopup = document.getElementById("info-popup");
+  const popupClose = document.getElementById("popup-close");
+
+  if (infoBtn && infoPopup && popupClose) {
+    infoBtn.addEventListener("click", () => {
+      infoPopup.classList.toggle("hidden");
+    });
+
+    popupClose.addEventListener("click", () => {
+      infoPopup.classList.add("hidden");
+    });
+  }
+});

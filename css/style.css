@@ -445,3 +445,50 @@ body {
 .extra {
   height: 35px;
 }
+
+.corner-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10001;
+  width: 40px;
+  height: 40px;
+  background-color: #01d1ff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.info-popup {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 300px;
+  background-color: #111;
+  color: white;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+}
+
+.info-popup.hidden {
+  display: none;
+}
+
+.popup-content h3 {
+  margin-top: 0;
+  color: #01d1ff;
+}
+
+.popup-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
