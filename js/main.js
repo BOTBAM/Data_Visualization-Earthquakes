@@ -12,6 +12,7 @@ let monthsArray = [];
 let isAnimating = false;
 let intervalId = null;
 let currentTimeFormat = "%Y-%m-%d"; // default
+let currentFilteredData = []; // Stores whatever data is currently shown
 
 
 const selectedMagnitudes = new Set();
@@ -84,6 +85,7 @@ d3.csv("data/4-10M_(1995-today).csv")
         d.time.getFullYear() === latestMonth.getFullYear() &&
         d.time.getMonth() === latestMonth.getMonth()
     );
+    currentFilteredData = initialData;
 
     // --- Create the map using only this month's data ---
     leafletMap = new LeafletMap({ parentElement: "#my-map" }, initialData);
@@ -98,12 +100,14 @@ d3.csv("data/4-10M_(1995-today).csv")
         monthLabel.textContent = formatMonthLabel(selectedMonth);
 
         // Filter data to match selected month
-        const filteredData = fullData.filter(
+        currentFilteredData = fullData.filter(
           (d) =>
             d.time.getFullYear() === selectedMonth.getFullYear() &&
             d.time.getMonth() === selectedMonth.getMonth() &&
             d.time.getDate() === selectedMonth.getDate()
         );
+        
+        const filteredData = currentFilteredData;
 
         // Push filtered data to map and charts
         leafletMap.setData(filteredData);
@@ -186,9 +190,11 @@ function expandToCustomRangeSlider() {
     endLabel.textContent = formatMonthLabel(endDate);
 
     // Filter and display data across full system
-    const filtered = fullData.filter(
+    currentFilteredData = fullData.filter(
       (d) => d.time >= startDate && d.time <= endDate
     );
+    const filtered = currentFilteredData;
+    
     leafletMap.setData(filtered);
     updateEarthquakeChart(startDate, endDate);
     console.log("Second, Start: " + startDate + " end: " + endDate);
@@ -656,7 +662,11 @@ function brushed({ selection }) {
   const maxDate = d3.max(datesInView);
 
   // Filter full dataset
-  const filtered = fullData.filter(d => d.time >= minDate && d.time <= maxDate);
+  currentFilteredData = fullData.filter(
+    (d) => d.time >= minDate && d.time <= maxDate
+  );
+  const filtered = currentFilteredData;
+  
 
   // Update all views
   leafletMap.setData(filtered);
@@ -760,7 +770,7 @@ document.getElementById("animation-btn").addEventListener("click", () => {
 });
 
 function applyFilters() {
-  let filtered = fullData;
+  let filtered = currentFilteredData.length > 0 ? currentFilteredData : fullData;
 
   // Filter by selected magnitudes
   if (selectedMagnitudes.size > 0) {
