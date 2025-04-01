@@ -448,7 +448,7 @@ body {
 
 .corner-float {
   position: fixed;
-  bottom: 20px;
+  top: 20px;
   right: 20px;
   z-index: 10001;
   width: 40px;
@@ -464,10 +464,12 @@ body {
 
 .info-popup {
   position: fixed;
-  bottom: 80px;
-  right: 20px;
-  width: 300px;
+  top: 60px;
+  right: 50px;
+  width: 40%;
   background-color: #111;
+  opacity: 0.95;
+  transition: opacity 0.3s ease-in-out;
   color: white;
   border-radius: 10px;
   padding: 16px;
