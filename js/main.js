@@ -14,6 +14,8 @@ let intervalId = null;
 let currentTimeSeriesData = [];
 let currentTSStartDate, currentTSEndDate;
 let currentTimeFormat = "%Y-%m-%d"; // default
+let currentFilteredDataset = [];
+
 
 const selectedMagnitudes = new Set();
 const selectedDepths = new Set();
@@ -114,6 +116,7 @@ d3.csv("data/4-10M_(1995-today).csv")
         const filteredData = fullData.filter(
           (d) => d.time >= startDate && d.time <= endDate
         );
+        currentFilteredDataset = filteredData;
 
         // Push filtered data to map and charts
         leafletMap.setData(filteredData);
@@ -199,6 +202,8 @@ function expandToCustomRangeSlider() {
     const filtered = fullData.filter(
       (d) => d.time >= startDate && d.time <= endDate
     );
+    currentFilteredDataset = filteredData;
+
     leafletMap.setData(filtered);
     updateEarthquakeChart(startDate, endDate);
     console.log("Second, Start: " + startDate + " end: " + endDate);
@@ -515,6 +520,7 @@ function updateEarthquakeChart(startDate, endDate) {
   const filteredData = fullData.filter(
     (d) => d.time >= startDate && d.time <= endDate
   );
+  currentFilteredDataset = filteredData;
 
   // Determine the time difference
   const timeDiff = endDate - startDate;
@@ -722,7 +728,7 @@ function brushed({ selection }) {
   const filtered = fullData.filter(
     (d) => d.time >= minDate && d.time <= maxDate
   );
-
+  currentFilteredDataset = filteredData;
   // Update all views
   leafletMap.setData(filtered);
   updateAllCharts(filtered);
@@ -798,6 +804,7 @@ function updateVisuals(index) {
   const filteredData = fullData.filter(
     (d) => d.time >= startDate && d.time <= endDate
   );
+  currentFilteredDataset = filteredData;
 
   leafletMap.setData(filteredData);
   updateEarthquakeChart(startDate, endDate); // Pass full month range
@@ -835,33 +842,28 @@ document.getElementById("animation-btn").addEventListener("click", () => {
 });
 
 function applyFilters() {
-  let filtered = fullData;
+  let filtered = currentFilteredDataset;
 
-  // Filter by selected magnitudes
   if (selectedMagnitudes.size > 0) {
     filtered = filtered.filter((d) =>
       selectedMagnitudes.has(getMagnitudeLabel(d.mag))
     );
   }
 
-  // Filter by selected depths
   if (selectedDepths.size > 0) {
     filtered = filtered.filter((d) =>
       selectedDepths.has(getDepthLabel(d.depth))
     );
   }
 
-  // Push filtered data to map and charts
   leafletMap.setData(filtered);
 
   const minDate = d3.min(filtered, (d) => d.time);
   const maxDate = d3.max(filtered, (d) => d.time);
-  updateEarthquakeChart(
-    minDate || new Date("1995-01-01"),
-    maxDate || new Date()
-  );
+  updateEarthquakeChart(minDate || new Date("1995-01-01"), maxDate || new Date());
   updateAllCharts(filtered);
 }
+
 
 function getMagnitudeLabel(mag) {
   if (mag >= 3 && mag < 4) return "3.0–3.9";
