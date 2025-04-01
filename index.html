@@ -44,7 +44,16 @@
           ><br />
         </div>
         <div id="anibtn" class="btnbtn">
+          <button id="reset-btn" class="button-17" onclick="resetAnimation()">
+            Reset
+          </button>
           <button id="animation-btn" class="button-17 extra">Animate</button>
+
+          <select id="speed-control" class="button-17">
+            <option value="500">1x</option>
+            <option value="250">2x</option>
+            <option value="1000">0.5x</option>
+          </select>
         </div>
 
         <div id="time-series-chart"></div>
@@ -57,22 +66,6 @@
       </div>
     </div>
 
-    <div id="chart-toggle">
-      <label
-        ><input
-          type="checkbox"
-          class="chart-toggle"
-          value="magnitude"
-          checked
-        />
-        Magnitude</label
-      >
-
-      <label
-        ><input type="checkbox" class="chart-toggle" value="depth" checked />
-        Depth</label
-      >
-    </div>
     <!-- Scripts -->
     <script src="js/d3.v6.min.js"></script>
     <script src="js/leaflet.js"></script>
