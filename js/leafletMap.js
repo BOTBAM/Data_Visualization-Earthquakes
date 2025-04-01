@@ -27,6 +27,11 @@ class LeafletMap {
   initVis() {
     let vis = this;
 
+    vis.currentViewData = vis.data; // Save visible data before brushing
+    vis.defaultCenter = [20, 150];  // Default center
+    vis.defaultZoom = 2.4;          // Default zoom
+
+
     //ESRI
     vis.esriUrl =
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -38,29 +43,35 @@ class LeafletMap {
     vis.topoAttr =
       'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)';
 
-    //Thunderforest Outdoors- requires key... so meh...
-    vis.thOutUrl =
-      "https://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey={apikey}";
-    vis.thOutAttr =
-      '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
-    //Stamen Terrain
-    vis.stUrl =
-      "https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.{ext}";
-    vis.stAttr =
-      'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
+    //satelite Terrain
+    vis.stadiaUrl = 'https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.jpg';
+    vis.stadiaAttr = '&copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+    
+      vis.baseLayers = {
+        "Satellite (ESRI)": L.tileLayer(vis.esriUrl, {
+          attribution: vis.esriAttr,
+        }),
+        "Topographic (OpenTopoMap)": L.tileLayer(vis.topoUrl, {
+          attribution: vis.topoAttr,
+        }),
+        "Satellite (Stadia)": L.tileLayer(vis.stadiaUrl, {
+          attribution: vis.stadiaAttr,
+          ext: 'jpg',
+          detectRetina: true
+        }),
+      };
+      
     //this is the base map layer, where we are showing the map background
     // (1) I left default to ESRI imagery, but you in screenshots you can see topoUrl, stUrl, etc.
-    vis.base_layer = L.tileLayer(vis.esriUrl, {
-      attribution: vis.esriAttr,
-      ext: "png",
-    });
+    // vis.base_layer = L.tileLayer(vis.esriUrl, {
+    //   attribution: vis.esriAttr,
+    //   ext: "png",
+    // });
 
     vis.theMap = L.map("my-map", {
       center: [20, 150],
       zoom: 2.4,
-      layers: [vis.base_layer],
+      layers: [vis.baseLayers["Satellite (ESRI)"]],
       maxBounds: [
         [-185, -310], // Southwest corner of bounds
         [185, 370], // Northeast corner of bounds
@@ -69,6 +80,23 @@ class LeafletMap {
       minZoom: 2, // Prevent zooming out too far
       maxZoom: 8, // Optional: prevent zooming in too far
     });
+    
+    // Remove default top-right control (if you want)
+    // L.control.layers(vis.baseLayers, null).addTo(vis.theMap);
+
+    const layerSelect = document.getElementById("base-layer-select");
+    layerSelect.addEventListener("change", function () {
+      const selectedLayer = vis.baseLayers[this.value];
+      if (selectedLayer) {
+        // Remove existing base layer(s)
+        Object.values(vis.baseLayers).forEach((layer) => {
+          if (vis.theMap.hasLayer(layer)) vis.theMap.removeLayer(layer);
+        });
+
+        vis.theMap.addLayer(selectedLayer);
+      }
+    });
+
     // (2) CREATE SCALES FOR MAGNITUDE -> COLOR & RADIUS
     vis.colorScale = d3
       .scaleSequential()
@@ -112,7 +140,6 @@ class LeafletMap {
         //function to add mouseover event
         d3.select(this)
           .transition() //D3 selects the object we have moused over in order to perform operations on it
-          .duration("150") //how long we are transitioning between the two states (works like keyframes)
           .attr("fill", "red") //change the fill
           .attr("r", (d) => vis.rScale(d.mag) * 1.6); //change radius to 1.6 times the original size (pops out kind of)
 
@@ -139,19 +166,134 @@ class LeafletMap {
         //function to add mouseover event
         d3.select(this)
           .transition() //D3 selects the object we have moused over in order to perform operations on it
-          .duration("150") //how long we are transitioning between the two states (works like keyframes)
           .attr("fill", (d) => vis.colorScale(d.mag))
           .attr("stroke", "black")
           .attr("fill", (d) => vis.colorScale(d.mag))
           .attr("r", (d) => vis.rScale(d.mag));
 
         d3.select("#tooltip").style("opacity", 0); //turn off the tooltip
-      });
+      })
 
+      .on("click", function (event, d) {
+        // If this quake is already selected, deselect it
+        const isAlreadySelected = d3.select(this).classed("selected");
+      
+        // Reset all circles
+        vis.Dots
+          .classed("selected", false)
+          .attr("r", (d) => vis.rScale(d.mag))
+          .attr("stroke", "black")
+          .attr("stroke-width", 1);
+      
+        if (!isAlreadySelected) {
+          // Highlight the clicked one
+          d3.select(this)
+            .classed("selected", true)
+            .raise()
+            .transition()
+            .duration(200)
+            .attr("r", vis.rScale(d.mag) * 2)
+            .attr("stroke", "white")
+            .attr("stroke-width", 2);
+      
+          if (typeof highlightLinkedCharts === "function") {
+            highlightLinkedCharts(d); // highlight in timeline + bar chart
+          }
+        } else {
+          // Deselect and remove any highlighting in charts
+          if (typeof clearChartHighlights === "function") {
+            clearChartHighlights(); // optional: write this to reset highlights
+          }
+        }
+      });
+      
+           
+    
     //handler here for updating the map, as you zoom in and out
     vis.theMap.on("zoomend", function () {
       vis.updateVis();
     });
+
+    vis.brushRect = null;
+
+    let isBrushMode = false;
+
+    const toggleButton = document.getElementById("toggle-mode-btn");
+    const resetButton = document.getElementById("reset-map-btn");
+
+    toggleButton.addEventListener("click", () => {
+      isBrushMode = !isBrushMode;
+      if (isBrushMode) {
+        vis.currentViewData = vis.data;
+        vis.currentCenter = vis.theMap.getCenter();
+        vis.currentZoom = vis.theMap.getZoom();
+      }    
+      
+      toggleButton.textContent = isBrushMode ? "Pan Mode" : "Brush Mode";
+      vis.theMap.dragging[isBrushMode ? "disable" : "enable"]();
+    });
+
+    resetButton.addEventListener("click", () => {
+      if (vis.brushRect) {
+        vis.theMap.removeLayer(vis.brushRect);
+        vis.brushRect = null;
+      }
+      vis.setData(vis.currentViewData);
+      updateAllCharts(vis.currentViewData);
+      updateEarthquakeChart(
+        d3.min(vis.currentViewData, (d) => d.time),
+        d3.max(vis.currentViewData, (d) => d.time)
+      );
+      vis.theMap.setView(vis.currentCenter || vis.defaultCenter, vis.currentZoom || vis.defaultZoom);
+      
+    });
+
+
+    vis.theMap.on("mousedown", function (e) {
+      if (!isBrushMode) return;
+    
+      if (vis.brushRect) {
+        vis.theMap.removeLayer(vis.brushRect);
+        vis.brushRect = null;
+      }
+    
+      const startLatLng = e.latlng;
+    
+      function onMouseMove(ev) {
+        const endLatLng = ev.latlng;
+        if (vis.brushRect) vis.theMap.removeLayer(vis.brushRect);
+    
+        vis.brushRect = L.rectangle(L.latLngBounds(startLatLng, endLatLng), {
+          color: "#fb5c6a",
+          weight: 2,
+          fillOpacity: 0.1,
+        }).addTo(vis.theMap);
+      }
+    
+      function onMouseUp(ev) {
+        vis.theMap.off("mousemove", onMouseMove);
+        vis.theMap.off("mouseup", onMouseUp);
+    
+        if (!vis.brushRect) return;
+    
+        const bounds = vis.brushRect.getBounds();
+        const filtered = vis.currentViewData.filter((d) =>
+          bounds.contains(L.latLng(d.latitude, d.longitude))
+        );
+    
+        vis.setData(filtered);
+        updateAllCharts(filtered);
+        updateEarthquakeChart(
+          d3.min(filtered, (d) => d.time),
+          d3.max(filtered, (d) => d.time)
+        );
+      }
+    
+      vis.theMap.on("mousemove", onMouseMove);
+      vis.theMap.on("mouseup", onMouseUp);
+    });
+    
+
   }
 
   setData(newData) {
@@ -188,7 +330,6 @@ class LeafletMap {
             .on("mouseover", function (event, d) {
               d3.select(this)
                 .transition()
-                .duration(150)
                 .attr("fill", "red")
                 .attr("r", 4);
 
@@ -210,7 +351,6 @@ class LeafletMap {
             .on("mouseleave", function () {
               d3.select(this)
                 .transition()
-                .duration(150)
                 .attr("fill", (d) => vis.colorScale(d.mag))
                 .attr("r", (d) => vis.rScale(d.mag));
 
