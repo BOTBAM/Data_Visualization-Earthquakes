@@ -279,15 +279,19 @@ function collapseToSingleSlider(index) {
   monthSlider.addEventListener("input", function () {
     if (!isRangeMode) {
       const idx = +this.value;
-      const m = monthsArray[idx];
-      monthLabel.textContent = formatMonthLabel(m);
-      const filtered = filterDataByMonth(m);
+      const selectedMonth = monthsArray[idx];
+      monthLabel.textContent = formatMonthLabel(selectedMonth);
+  
+      const startDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+      const endDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+  
+      const filtered = fullData.filter(d => d.time >= startDate && d.time <= endDate);
       leafletMap.setData(filtered);
-      updateEarthquakeChart(m, m);
+      updateEarthquakeChart(startDate, endDate);
       updateAllCharts(filtered);
-      updateVisuals(index);
     }
   });
+  
 
   // Enable expanding to range mode on double-click
   monthSlider.addEventListener("dblclick", () => {
@@ -919,3 +923,19 @@ function highlightLinkedCharts(quake) {
     d3.select(this).classed("highlighted-bar", isMatch);
   });
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  const infoBtn = document.getElementById("info-btn");
+  const infoPopup = document.getElementById("info-popup");
+  const popupClose = document.getElementById("popup-close");
+
+  if (infoBtn && infoPopup && popupClose) {
+    infoBtn.addEventListener("click", () => {
+      infoPopup.classList.toggle("hidden");
+    });
+
+    popupClose.addEventListener("click", () => {
+      infoPopup.classList.add("hidden");
+    });
+  }
+});
