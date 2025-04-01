@@ -360,6 +360,12 @@ body {
     rgba(60, 64, 67, 0.15) 0 4px 8px 3px;
 }
 
+.highlighted-bar {
+  stroke: rgb(234, 21, 21);
+  stroke-width: 3px;
+  opacity: 1;
+}
+
 .floating-dropdown {
   position: absolute;
   z-index: 1000;

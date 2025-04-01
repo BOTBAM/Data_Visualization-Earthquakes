@@ -135,7 +135,6 @@ class LeafletMap {
         //function to add mouseover event
         d3.select(this)
           .transition() //D3 selects the object we have moused over in order to perform operations on it
-          .duration("150") //how long we are transitioning between the two states (works like keyframes)
           .attr("fill", "red") //change the fill
           .attr("r", (d) => vis.rScale(d.mag) * 1.6); //change radius to 1.6 times the original size (pops out kind of)
 
@@ -162,15 +161,49 @@ class LeafletMap {
         //function to add mouseover event
         d3.select(this)
           .transition() //D3 selects the object we have moused over in order to perform operations on it
-          .duration("150") //how long we are transitioning between the two states (works like keyframes)
           .attr("fill", (d) => vis.colorScale(d.mag))
           .attr("stroke", "black")
           .attr("fill", (d) => vis.colorScale(d.mag))
           .attr("r", (d) => vis.rScale(d.mag));
 
         d3.select("#tooltip").style("opacity", 0); //turn off the tooltip
-      });
+      })
 
+      .on("click", function (event, d) {
+        // If this quake is already selected, deselect it
+        const isAlreadySelected = d3.select(this).classed("selected");
+      
+        // Reset all circles
+        vis.Dots
+          .classed("selected", false)
+          .attr("r", (d) => vis.rScale(d.mag))
+          .attr("stroke", "black")
+          .attr("stroke-width", 1);
+      
+        if (!isAlreadySelected) {
+          // Highlight the clicked one
+          d3.select(this)
+            .classed("selected", true)
+            .raise()
+            .transition()
+            .duration(200)
+            .attr("r", vis.rScale(d.mag) * 2)
+            .attr("stroke", "white")
+            .attr("stroke-width", 2);
+      
+          if (typeof highlightLinkedCharts === "function") {
+            highlightLinkedCharts(d); // highlight in timeline + bar chart
+          }
+        } else {
+          // Deselect and remove any highlighting in charts
+          if (typeof clearChartHighlights === "function") {
+            clearChartHighlights(); // optional: write this to reset highlights
+          }
+        }
+      });
+      
+           
+    
     //handler here for updating the map, as you zoom in and out
     vis.theMap.on("zoomend", function () {
       vis.updateVis();
@@ -211,7 +244,6 @@ class LeafletMap {
             .on("mouseover", function (event, d) {
               d3.select(this)
                 .transition()
-                .duration(150)
                 .attr("fill", "red")
                 .attr("r", 4);
 
@@ -233,7 +265,6 @@ class LeafletMap {
             .on("mouseleave", function () {
               d3.select(this)
                 .transition()
-                .duration(150)
                 .attr("fill", (d) => vis.colorScale(d.mag))
                 .attr("r", (d) => vis.rScale(d.mag));
 
