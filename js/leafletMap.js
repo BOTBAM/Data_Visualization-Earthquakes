@@ -27,6 +27,11 @@ class LeafletMap {
   initVis() {
     let vis = this;
 
+    vis.currentViewData = vis.data; // Save visible data before brushing
+    vis.defaultCenter = [20, 150];  // Default center
+    vis.defaultZoom = 2.4;          // Default zoom
+
+
     //ESRI
     vis.esriUrl =
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -66,7 +71,7 @@ class LeafletMap {
     vis.theMap = L.map("my-map", {
       center: [20, 150],
       zoom: 2.4,
-      layers: [vis.baseLayers["Topographic (OpenTopoMap)"]],
+      layers: [vis.baseLayers["Satellite (ESRI)"]],
       maxBounds: [
         [-185, -310], // Southwest corner of bounds
         [185, 370], // Northeast corner of bounds
@@ -208,6 +213,87 @@ class LeafletMap {
     vis.theMap.on("zoomend", function () {
       vis.updateVis();
     });
+
+    vis.brushRect = null;
+
+    let isBrushMode = false;
+
+    const toggleButton = document.getElementById("toggle-mode-btn");
+    const resetButton = document.getElementById("reset-map-btn");
+
+    toggleButton.addEventListener("click", () => {
+      isBrushMode = !isBrushMode;
+      if (isBrushMode) {
+        vis.currentViewData = vis.data;
+        vis.currentCenter = vis.theMap.getCenter();
+        vis.currentZoom = vis.theMap.getZoom();
+      }    
+      
+      toggleButton.textContent = isBrushMode ? "Pan Mode" : "Brush Mode";
+      vis.theMap.dragging[isBrushMode ? "disable" : "enable"]();
+    });
+
+    resetButton.addEventListener("click", () => {
+      if (vis.brushRect) {
+        vis.theMap.removeLayer(vis.brushRect);
+        vis.brushRect = null;
+      }
+      vis.setData(vis.currentViewData);
+      updateAllCharts(vis.currentViewData);
+      updateEarthquakeChart(
+        d3.min(vis.currentViewData, (d) => d.time),
+        d3.max(vis.currentViewData, (d) => d.time)
+      );
+      vis.theMap.setView(vis.currentCenter || vis.defaultCenter, vis.currentZoom || vis.defaultZoom);
+      
+    });
+
+
+    vis.theMap.on("mousedown", function (e) {
+      if (!isBrushMode) return;
+    
+      if (vis.brushRect) {
+        vis.theMap.removeLayer(vis.brushRect);
+        vis.brushRect = null;
+      }
+    
+      const startLatLng = e.latlng;
+    
+      function onMouseMove(ev) {
+        const endLatLng = ev.latlng;
+        if (vis.brushRect) vis.theMap.removeLayer(vis.brushRect);
+    
+        vis.brushRect = L.rectangle(L.latLngBounds(startLatLng, endLatLng), {
+          color: "#fb5c6a",
+          weight: 2,
+          fillOpacity: 0.1,
+        }).addTo(vis.theMap);
+      }
+    
+      function onMouseUp(ev) {
+        vis.theMap.off("mousemove", onMouseMove);
+        vis.theMap.off("mouseup", onMouseUp);
+    
+        if (!vis.brushRect) return;
+    
+        const bounds = vis.brushRect.getBounds();
+        const filtered = vis.currentViewData.filter((d) =>
+          bounds.contains(L.latLng(d.latitude, d.longitude))
+        );
+    
+        vis.setData(filtered);
+        updateAllCharts(filtered);
+        updateEarthquakeChart(
+          d3.min(filtered, (d) => d.time),
+          d3.max(filtered, (d) => d.time)
+        );
+      }
+    
+      vis.theMap.on("mousemove", onMouseMove);
+      vis.theMap.on("mouseup", onMouseUp);
+    });
+    
+
   }
 
   setData(newData) {
