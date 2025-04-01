@@ -769,6 +769,100 @@ document.getElementById("animation-btn").addEventListener("click", () => {
   isAnimating ? stopAnimation() : startAnimation();
 });
 
+function resetApp() {
+  stopAnimation();
+
+  selectedMagnitudes.clear();
+  selectedDepths.clear();
+
+  d3.select(".brush").call(d3.brush().move, null);
+  isRangeMode = true;
+
+  const controls = document.getElementById("controls");
+  controls.innerHTML = `
+    <div id="range-slider">
+      <div id="range-track"></div>
+      <div id="thumb-start" class="range-thumb"></div>
+      <div id="thumb-end" class="range-thumb"></div>
+    </div>
+    <div id="range-labels" style="margin-top: 6px; text-align: center;">
+      <span id="rangeStartLabel" style="font-weight: bold;"></span> - 
+      <span id="rangeEndLabel" style="font-weight: bold;"></span>
+    </div>
+  `;
+
+  const track = document.getElementById("range-track");
+  const thumbStart = document.getElementById("thumb-start");
+  const thumbEnd = document.getElementById("thumb-end");
+  const startLabel = document.getElementById("rangeStartLabel");
+  const endLabel = document.getElementById("rangeEndLabel");
+
+  let startIndex = 0;
+  let endIndex = monthsArray.length - 1;
+
+  function positionThumb(thumb, index) {
+    const pct = (index / (monthsArray.length - 1)) * 100;
+    thumb.style.left = `${pct}%`;
+  }
+
+  function update() {
+    const startDate = monthsArray[startIndex];
+    const endDate = monthsArray[endIndex];
+
+    startLabel.textContent = formatMonthLabel(startDate);
+    endLabel.textContent = formatMonthLabel(endDate);
+
+    currentFilteredData = fullData.filter(
+      (d) => d.time >= startDate && d.time <= endDate
+    );
+    const filtered = currentFilteredData;
+
+    leafletMap.theMap.setView([20, 150], 2.4);
+    leafletMap.setData(filtered);
+    updateEarthquakeChart(startDate, endDate);
+    updateAllCharts(filtered);
+  }
+
+  positionThumb(thumbStart, startIndex);
+  positionThumb(thumbEnd, endIndex);
+  update();
+
+  let activeThumb = null;
+  thumbStart.addEventListener("mousedown", () => (activeThumb = "start"));
+  thumbEnd.addEventListener("mousedown", () => (activeThumb = "end"));
+  document.addEventListener("mouseup", () => (activeThumb = null));
+
+  document.addEventListener("mousemove", (e) => {
+    if (!activeThumb) return;
+
+    const rect = track.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, x / rect.width));
+    const idx = Math.round(pct * (monthsArray.length - 1));
+
+    if (activeThumb === "start") {
+      startIndex = Math.min(idx, endIndex);
+      positionThumb(thumbStart, startIndex);
+    } else {
+      endIndex = Math.max(idx, startIndex);
+      positionThumb(thumbEnd, endIndex);
+    }
+
+    update();
+
+    if (startIndex === endIndex) collapseToSingleSlider(startIndex);
+  });
+}
+
+// Hook up Reset button
+const resetBtn = document.createElement("button");
+resetBtn.textContent = "Reset";
+resetBtn.id = "reset-btn";
+resetBtn.classList.add("button-17");
+resetBtn.addEventListener("click", resetApp);
+document.querySelector(".btnbtn").prepend(resetBtn);
+
+
 function applyFilters() {
   let filtered = currentFilteredData.length > 0 ? currentFilteredData : fullData;
 
