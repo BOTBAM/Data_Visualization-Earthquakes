@@ -55,6 +55,7 @@ body {
 
 #time-series-chart {
   transition: width 0.5s ease-in-out;
+  z-index: 0;
 }
 /* Charts area */
 #charts-container {
@@ -376,6 +377,7 @@ body {
   stroke: rgb(234, 21, 21);
   stroke-width: 3px;
   opacity: 1;
+  z-index: 1;
 }
 
 .floating-dropdown {
@@ -438,4 +440,3 @@ body {
   border-radius: 4px;
   cursor: pointer;
 }
-

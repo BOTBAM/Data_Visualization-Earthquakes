@@ -687,16 +687,16 @@ function drawTimeSeriesChart(data, startDate, endDate) {
       d3.select("#tooltip").style("opacity", 0);
     });
 
-  // Step 1: Add brushing behavior
-  const brush = d3
-    .brushX()
-    .extent([
-      [margin.left, margin.top],
-      [width - margin.right, height - margin.bottom],
-    ])
-    .on("end", brushed);
+  // // Step 1: Add brushing behavior
+  // const brush = d3
+  //   .brushX()
+  //   .extent([
+  //     [margin.left, margin.top],
+  //     [width - margin.right, height - margin.bottom],
+  //   ])
+  //   .on("end", brushed);
 
-  svg.append("g").attr("class", "brush").call(brush);
+  // svg.append("g").attr("class", "brush").call(brush);
 }
 
 function brushed({ selection }) {
