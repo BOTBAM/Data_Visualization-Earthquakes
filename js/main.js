@@ -812,6 +812,9 @@ function startAnimation() {
   const slider = document.getElementById("monthSlider");
   slider.value = 0; // Start from the first month
   updateVisuals(0);
+
+  const speed = +document.getElementById("speed-control").value;
+
   intervalId = setInterval(() => {
     if (+slider.value >= +slider.max) {
       stopAnimation();
@@ -819,7 +822,7 @@ function startAnimation() {
     }
     slider.value++;
     updateVisuals(slider.value);
-  }, 500); // Adjust speed (milliseconds)
+  }, speed);
 }
 
 function stopAnimation() {
@@ -827,6 +830,11 @@ function stopAnimation() {
   document.getElementById("animation-btn").textContent = "Animate";
   clearInterval(intervalId);
   intervalId = null;
+}
+
+function resetAnimation() {
+  stopAnimation();
+  collapseToSingleSlider(0);
 }
 
 // Toggle animation on button click
