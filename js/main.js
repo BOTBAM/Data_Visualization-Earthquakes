@@ -11,6 +11,8 @@ let isRangeMode = false;
 let monthsArray = [];
 let isAnimating = false;
 let intervalId = null;
+let currentTimeSeriesData = [];
+let currentTSStartDate, currentTSEndDate;
 
 // Load CSV earthquake data asynchronously using D3
 d3.csv("data/4-10M_(1995-today).csv")
@@ -89,21 +91,30 @@ d3.csv("data/4-10M_(1995-today).csv")
         const index = +this.value;
         const selectedMonth = monthsArray[index];
 
+        // Calculate start and end of the selected month
+        const startDate = new Date(
+          selectedMonth.getFullYear(),
+          selectedMonth.getMonth(),
+          1
+        );
+        const endDate = new Date(
+          selectedMonth.getFullYear(),
+          selectedMonth.getMonth() + 1,
+          0
+        );
+
         // Update label to show selected month
         monthLabel.textContent = formatMonthLabel(selectedMonth);
 
         // Filter data to match selected month
         const filteredData = fullData.filter(
-          (d) =>
-            d.time.getFullYear() === selectedMonth.getFullYear() &&
-            d.time.getMonth() === selectedMonth.getMonth() &&
-            d.time.getDate() === selectedMonth.getDate()
+          (d) => d.time >= startDate && d.time <= endDate
         );
 
         // Push filtered data to map and charts
         leafletMap.setData(filteredData);
-        updateEarthquakeChart(selectedMonth, selectedMonth);
-        console.log("First " + selectedMonth);
+        console.log("called update" + " month:" + selectedMonth);
+        updateEarthquakeChart(startDate, endDate);
         updateAllCharts(filteredData);
       }
     });
@@ -386,39 +397,38 @@ function drawBarChart(container, dataObj, color, hoverColor, title, xLabel) {
 
   // Bars (with transitions and join pattern)
   const bars = svg
-  .selectAll("rect")
-  .data(data, (d) => d.label)
-  .join(
-    (enter) =>
-      enter
-        .append("rect")
-        .attr("x", (d) => x(d.label))
-        .attr("width", x.bandwidth())
-        .attr("y", (d) => y(d.value)) // Start at correct top
-        .attr("height", (d) => height - margin.bottom - y(d.value))
-        .attr("fill", color),
-    (update) =>
-      update.call((update) =>
-        update
-          .transition()
-          .duration(600)
-          .delay((d, i) => i * 30) // Delay each bar by 30ms per index
-          .ease(d3.easeCubicInOut)
-          .attr("y", (d) => y(d.value)) // new top
-          .attr("height", (d) => height - margin.bottom - y(d.value)) // new height from new top
-          .attr("fill", color)
-      ),
-    (exit) =>
-      exit.call((exit) =>
-        exit
-          .transition()
-          .duration(300)
-          .attr("y", y(0))
-          .attr("height", 0)
-          .remove()
-      )
-  );
-
+    .selectAll("rect")
+    .data(data, (d) => d.label)
+    .join(
+      (enter) =>
+        enter
+          .append("rect")
+          .attr("x", (d) => x(d.label))
+          .attr("width", x.bandwidth())
+          .attr("y", (d) => y(d.value)) // Start at correct top
+          .attr("height", (d) => height - margin.bottom - y(d.value))
+          .attr("fill", color),
+      (update) =>
+        update.call((update) =>
+          update
+            .transition()
+            .duration(600)
+            .delay((d, i) => i * 30) // Delay each bar by 30ms per index
+            .ease(d3.easeCubicInOut)
+            .attr("y", (d) => y(d.value)) // new top
+            .attr("height", (d) => height - margin.bottom - y(d.value)) // new height from new top
+            .attr("fill", color)
+        ),
+      (exit) =>
+        exit.call((exit) =>
+          exit
+            .transition()
+            .duration(300)
+            .attr("y", y(0))
+            .attr("height", 0)
+            .remove()
+        )
+    );
 
   // Tooltip interaction
   bars
@@ -469,9 +479,19 @@ document.querySelectorAll(".chart-toggle").forEach((toggle) => {
   });
 });
 
+function redrawTimeSeries() {
+  if (currentTimeSeriesData.length > 0) {
+    drawTimeSeriesChart(
+      currentTimeSeriesData,
+      currentTSStartDate,
+      currentTSEndDate
+    );
+  }
+}
+
 function updateEarthquakeChart(startDate, endDate) {
   // Filters the earthquakes within the selected date range
-
+  console.log("Respodning from updateEarthquake" + startDate);
   startDate = new Date(startDate);
   endDate = new Date(endDate);
 
@@ -503,21 +523,45 @@ function updateEarthquakeChart(startDate, endDate) {
   const earthquakeCounts = d3.rollup(filteredData, (v) => v.length, groupBy);
 
   // Convert to sorted array
-  const data = Array.from(earthquakeCounts, ([date, count]) => ({
-    date,
-    count,
-  })).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const data = Array.from(earthquakeCounts, ([dateStr, count]) => {
+    // Parse date string based on aggregation level
+    let date;
+    switch (timeFormat) {
+      case "%Y-%m-%d":
+        date = new Date(dateStr);
+        break;
+      case "%Y-%m":
+        date = new Date(`${dateStr}-01`); // Add day component
+        break;
+      case "%Y":
+        date = new Date(`${dateStr}-01-01`); // Add month/day
+        break;
+      default:
+        date = new Date(dateStr);
+    }
+    return { date, count };
+  }).sort((a, b) => a.date - b.date); // Direct date comparison
 
+  // drawTimeSeriesChart(data, startDate, endDate);
+  currentTimeSeriesData = data;
+  currentTSStartDate = startDate;
+  currentTSEndDate = endDate;
   drawTimeSeriesChart(data, startDate, endDate);
+
+  console.log("Reached bottom of update");
 }
 
 function drawTimeSeriesChart(data, startDate, endDate) {
+  startDate = new Date(startDate);
+  endDate = new Date(endDate);
   const container = "#time-series-chart";
   d3.select(container).select("svg").remove(); // Clear previous chart
 
-  const width = 1000,
-    height = 200,
-    margin = { top: 30, right: 30, bottom: 80, left: 70 };
+  const containerEl = document.querySelector(container);
+  const isExpanded = containerEl.getAttribute("data-expanded") === "true";
+  const width = isExpanded ? 1400 : 1000; // Set 1200 when expanded
+
+  (height = 200), (margin = { top: 30, right: 30, bottom: 80, left: 70 });
 
   const svg = d3
     .select(container)
@@ -594,6 +638,7 @@ function drawTimeSeriesChart(data, startDate, endDate) {
     .style("stroke-width", 1); // Optional: Adjust stroke width if necessary
 
   // Draw bars
+  // In drawTimeSeriesChart function (main.js)
   svg
     .selectAll("rect")
     .data(data)
@@ -603,7 +648,26 @@ function drawTimeSeriesChart(data, startDate, endDate) {
     .attr("y", (d) => y(d.count))
     .attr("width", x.bandwidth())
     .attr("height", (d) => height - margin.bottom - y(d.count))
-    .attr("fill", "#01d1ff");
+    .attr("fill", "#01d1ff")
+    .on("mouseover", function (event, d) {
+      d3.select("#tooltip")
+        .style("opacity", 1)
+        .html(
+          `<strong>${d3.timeFormat("%Y-%m-%d")(new Date(d.date))}</strong><br>${
+            d.count
+          } earthquakes`
+        )
+        .style("left", event.pageX + 10 + "px")
+        .style("top", event.pageY - 28 + "px");
+    })
+    .on("mousemove", function (event) {
+      d3.select("#tooltip")
+        .style("left", event.pageX + 10 + "px")
+        .style("top", event.pageY - 28 + "px");
+    })
+    .on("mouseout", function () {
+      d3.select("#tooltip").style("opacity", 0);
+    });
 }
 
 // Added update function to pass currently selected data
@@ -684,19 +748,30 @@ function getDepthBuckets(data) {
 
 function updateVisuals(index) {
   const selectedMonth = monthsArray[index];
-  monthLabel.textContent = formatMonthLabel(selectedMonth);
-  // Corrected filter: include all days in the month
-  const filteredData = fullData.filter(
-    (d) =>
-      d.time.getFullYear() === selectedMonth.getFullYear() &&
-      d.time.getMonth() === selectedMonth.getMonth()
+  const startDate = new Date(
+    selectedMonth.getFullYear(),
+    selectedMonth.getMonth(),
+    1
   );
+  const endDate = new Date(
+    selectedMonth.getFullYear(),
+    selectedMonth.getMonth() + 1,
+    0
+  );
+
+  monthLabel.textContent = formatMonthLabel(selectedMonth);
+  const filteredData = fullData.filter(
+    (d) => d.time >= startDate && d.time <= endDate
+  );
+
   leafletMap.setData(filteredData);
-  updateEarthquakeChart(selectedMonth, selectedMonth);
+  updateEarthquakeChart(startDate, endDate); // Pass full month range
   updateAllCharts(filteredData);
 }
 
 function startAnimation() {
+  collapseToSingleSlider(0);
+
   isAnimating = true;
   document.getElementById("animation-btn").textContent = "Stop";
   const slider = document.getElementById("monthSlider");
@@ -723,68 +798,3 @@ function stopAnimation() {
 document.getElementById("animation-btn").addEventListener("click", () => {
   isAnimating ? stopAnimation() : startAnimation();
 });
-
-// document.addEventListener("DOMContentLoaded", function () {
-//   const monthSlider = document.getElementById("monthSlider");
-//   const monthLabel = document.getElementById("monthLabel");
-//   const animateButton = document.getElementById("animation-btn");
-//   animateButton.textContent = "Animate";
-//   // animateButton.classList.add("floating-btn");
-//   document.getElementById("controls").appendChild(animateButton);
-
-//   let animationInterval;
-//   let animationSpeed = 500; // in milliseconds
-//   let isAnimating = false;
-
-//   function updateMonthLabel() {
-//     monthLabel.textContent = monthSlider.value;
-//   }
-
-//   function startAnimation() {
-//     if (isAnimating) return;
-//     isAnimating = true;
-//     animateButton.textContent = "Stop";
-//     let currentValue = parseInt(monthSlider.min);
-//     const maxValue = parseInt(monthSlider.max);
-
-//     monthSlider.value = currentValue;
-//     updateMonthLabel();
-
-//     animationInterval = setInterval(() => {
-//       if (currentValue >= maxValue) {
-//         clearInterval(animationInterval);
-//         isAnimating = false;
-//         animateButton.textContent = "Animate";
-//       } else {
-//         currentValue++;
-//         monthSlider.value = currentValue;
-//         updateMonthLabel();
-//         // updating the map and charts based on slider value maybeeee
-//         updateVisualization(currentValue);
-//       }
-//     }, animationSpeed);
-//   }
-
-//   function stopAnimation() {
-//     clearInterval(animationInterval);
-//     isAnimating = false;
-//     animateButton.textContent = "Animate";
-//   }
-
-//   animateButton.addEventListener("click", function () {
-//     if (isAnimating) {
-//       stopAnimation();
-//     } else {
-//       startAnimation();
-//     }
-//   });
-
-//   monthSlider.addEventListener("input", updateMonthLabel);
-
-//   function updateVisualization(value) {
-//     console.log("Animating to month:", value);
-//     // we need to call/add functions to update the map, timeline, and charts
-//   }
-
-//   updateMonthLabel(); // Set initial label
-// });
